@@ -1,28 +1,24 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const fs = require("fs");
-const { spawn } = require("child_process");
-const waitOn = require("wait-on");
 
-let backendProcess;
-let frontendProcess;
 let splashWindow;
 let mainWindow;
 
 function startBackend() {
-  backendProcess = spawn("npm", ["run", "start"], {
-    cwd: path.join(__dirname, "..", "backend"),
-    shell: true,
-    stdio: "inherit"
-  });
+  try {
+    const backendEntry = path.join(__dirname, "..", "backend", "dist", "index.js");
+    require(backendEntry);
+    console.log("Backend started from:", backendEntry);
+  } catch (error) {
+    console.error("Failed to start backend:", error);
+  }
 }
 
-function startFrontend() {
-  frontendProcess = spawn("npm", ["run", "dev"], {
-    cwd: path.join(__dirname, "..", "frontend"),
-    shell: true,
-    stdio: "inherit"
-  });
+function getAssetPath(fileName) {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, "assets", fileName)
+    : path.join(__dirname, "assets", fileName);
 }
 
 function createSplashWindow() {
@@ -39,7 +35,7 @@ function createSplashWindow() {
     }
   });
 
-  const logoPath = path.join(__dirname, "assets", "ks-logo-purple.png");
+  const logoPath = getAssetPath("ks-logo-purple.png");
   const logoBase64 = fs.readFileSync(logoPath).toString("base64");
 
   const splashHtml = `
@@ -60,12 +56,7 @@ function createSplashWindow() {
             font-family: Arial, sans-serif;
             overflow: hidden;
           }
-
-          .card {
-            text-align: center;
-            color: white;
-          }
-
+          .card { text-align: center; color: white; }
           .logo-img {
             width: 120px;
             height: auto;
@@ -73,19 +64,8 @@ function createSplashWindow() {
             margin: 0 auto 20px auto;
             filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.6));
           }
-
-          .title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-          }
-
-          .tagline {
-            font-size: 14px;
-            color: #c9b8ff;
-            margin-bottom: 25px;
-          }
-
+          .title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+          .tagline { font-size: 14px; color: #c9b8ff; margin-bottom: 25px; }
           .loader {
             width: 220px;
             height: 6px;
@@ -94,7 +74,6 @@ function createSplashWindow() {
             overflow: hidden;
             margin: 0 auto;
           }
-
           .bar {
             height: 100%;
             width: 45%;
@@ -102,43 +81,26 @@ function createSplashWindow() {
             border-radius: 999px;
             animation: loading 1.2s infinite ease-in-out;
           }
-
-          .status {
-            margin-top: 15px;
-            font-size: 12px;
-            color: #aaa;
-          }
-
+          .status { margin-top: 15px; font-size: 12px; color: #aaa; }
           @keyframes loading {
-            0% {
-              transform: translateX(-120%);
-            }
-            100% {
-              transform: translateX(260%);
-            }
+            0% { transform: translateX(-120%); }
+            100% { transform: translateX(260%); }
           }
         </style>
       </head>
-
       <body>
         <div class="card">
           <img src="data:image/png;base64,${logoBase64}" class="logo-img" />
           <div class="title">KS-Vid-Lite</div>
           <div class="tagline">AI-Assisted Video Editing Engine</div>
-
-          <div class="loader">
-            <div class="bar"></div>
-          </div>
-
+          <div class="loader"><div class="bar"></div></div>
           <div class="status">Initializing backend & interface...</div>
         </div>
       </body>
     </html>
   `;
 
-  splashWindow.loadURL(
-    "data:text/html;charset=utf-8," + encodeURIComponent(splashHtml)
-  );
+  splashWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(splashHtml));
 }
 
 function createMainWindow() {
@@ -148,6 +110,7 @@ function createMainWindow() {
     title: "KS-Vid-Lite",
     backgroundColor: "#0f0f14",
     show: false,
+    icon: getAssetPath("icon.ico"),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true
@@ -155,7 +118,9 @@ function createMainWindow() {
   });
 
   mainWindow.maximize();
-  mainWindow.loadURL("http://localhost:5173");
+
+  const frontendEntry = path.join(__dirname, "..", "frontend", "dist", "index.html");
+  mainWindow.loadFile(frontendEntry);
 
   mainWindow.once("ready-to-show", () => {
     if (splashWindow) {
@@ -167,29 +132,16 @@ function createMainWindow() {
   });
 }
 
-app.whenReady().then(async () => {
+app.whenReady().then(() => {
   createSplashWindow();
-
   startBackend();
-  startFrontend();
 
-  try {
-    await waitOn({
-      resources: ["http://localhost:3001/health", "http://localhost:5173"],
-      timeout: 30000
-    });
-
+  setTimeout(() => {
     createMainWindow();
-  } catch (error) {
-    console.error("Failed to start KS-Vid-Lite services:", error);
-    app.quit();
-  }
+  }, 1500);
 });
 
 app.on("window-all-closed", () => {
-  if (backendProcess) backendProcess.kill();
-  if (frontendProcess) frontendProcess.kill();
-
   if (process.platform !== "darwin") {
     app.quit();
   }

@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "clean:vite": "rimraf --glob \"vite.config.js.timestamp-*.mjs\"",
+    "dev": "npm run clean:vite && vite",
+    "build": "npm run clean:vite && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -14,6 +15,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "rimraf": "^5.0.5"
   }
 }

@@ -1,31 +1,78 @@
 {
   "name": "ks-vid-lite",
-  "version": "1.0.0",
+  "version": "1.0.0-beta",
   "description": "KS-Vid-Lite is an AI-assisted desktop video editing tool designed to help creators quickly turn raw video clips into polished, social media-ready content.",
   "main": "electron/main.js",
-  "directories": {
-    "doc": "docs"
-  },
   "scripts": {
     "dev:desktop": "electron .",
+    "clean:frontend-temp": "rimraf --glob \"frontend/vite.config.js.timestamp-*.mjs\"",
+    "clean:dist": "rimraf dist release frontend/dist backend/dist",
+    "clean:logs": "rimraf --glob \"*.log\" \"npm-debug.log*\" \"yarn-debug.log*\" \"yarn-error.log*\"",
+    "clean:all": "npm run clean:frontend-temp && npm run clean:logs",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "prepack:desktop": "npm run clean:all && npm run build:frontend && npm run build:backend",
+    "build:desktop": "npm run prepack:desktop && electron-builder --win",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ClydeMcNeil25/KS-Vid-Lite.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "video-editor",
+    "electron",
+    "ffmpeg",
+    "ai-assisted-editing"
+  ],
+  "author": "Krucial Studios",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/ClydeMcNeil25/KS-Vid-Lite/issues"
   },
   "homepage": "https://github.com/ClydeMcNeil25/KS-Vid-Lite#readme",
+  "dependencies": {
+    "wait-on": "^9.0.5"
+  },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "electron": "^41.3.0",
     "electron-builder": "^26.8.1",
-    "wait-on": "^9.0.5"
+    "rimraf": "^5.0.5"
+  },
+  "build": {
+    "appId": "com.krucialstudios.ksvidlite",
+    "productName": "KS-Vid-Lite",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/dist/**/*",
+      "backend/**/*",
+      "package.json",
+      "!**/node_modules/.cache/**/*",
+      "!**/test-assets/output/**/*",
+      "!**/*.log",
+      "!frontend/vite.config.js.timestamp-*.mjs"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/assets",
+        "to": "assets"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+	  "icon": "electron/assets/icon.ico"
+	},
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "KS-Vid-Lite"
+    }
   }
 }
