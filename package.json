@@ -1,0 +1,31 @@
+{
+  "name": "ks-vid-lite",
+  "version": "1.0.0",
+  "description": "KS-Vid-Lite is an AI-assisted desktop video editing tool designed to help creators quickly turn raw video clips into polished, social media-ready content.",
+  "main": "electron/main.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev:desktop": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClydeMcNeil25/KS-Vid-Lite.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ClydeMcNeil25/KS-Vid-Lite/issues"
+  },
+  "homepage": "https://github.com/ClydeMcNeil25/KS-Vid-Lite#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "electron": "^41.3.0",
+    "electron-builder": "^26.8.1",
+    "wait-on": "^9.0.5"
+  }
+}
