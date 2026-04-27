@@ -3,6 +3,8 @@ backend/node_modules/
 frontend/node_modules/
 backend/test-assets/*.mp4
 backend/test-assets/output/
+backend/temp/
+temp/
 
 dist/
 build/

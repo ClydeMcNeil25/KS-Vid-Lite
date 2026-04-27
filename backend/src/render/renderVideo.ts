@@ -5,7 +5,25 @@ import ffmpegPath from "ffmpeg-static";
 import ffprobeStatic from "ffprobe-static";
 import { AspectRatio, OutputFps } from "../types/project.types";
 
-function resolvePackedBinaryPath(binaryPath: string | null, fallbackParts: string[]) {
+function getResourcesPath() {
+  return (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
+}
+
+function resolvePackedBinaryPath(
+  binaryPath: string | null,
+  binaryName: "ffmpeg.exe" | "ffprobe.exe",
+  fallbackParts: string[]
+) {
+  const resourcesPath = getResourcesPath();
+
+  if (resourcesPath) {
+    const directPath = path.join(resourcesPath, "bin", binaryName);
+
+    if (fs.existsSync(directPath)) {
+      return directPath;
+    }
+  }
+
   if (!binaryPath) {
     return "";
   }
@@ -16,35 +34,36 @@ function resolvePackedBinaryPath(binaryPath: string | null, fallbackParts: strin
     return unpackedPath;
   }
 
-  const resourcesPath =
-  (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
-
   if (resourcesPath) {
     const manualPath = path.join(
       resourcesPath,
       "app.asar.unpacked",
       ...fallbackParts
-  );
+    );
 
-  if (fs.existsSync(manualPath)) {
-    return manualPath;
+    if (fs.existsSync(manualPath)) {
+      return manualPath;
+    }
   }
-}
 
   return binaryPath;
 }
 
 const resolvedFfmpegPath = resolvePackedBinaryPath(
   ffmpegPath,
+  "ffmpeg.exe",
   ["node_modules", "ffmpeg-static", "ffmpeg.exe"]
 );
 
 const resolvedFfprobePath = resolvePackedBinaryPath(
   ffprobeStatic.path,
+  "ffprobe.exe",
   ["node_modules", "ffprobe-static", "bin", "win32", "x64", "ffprobe.exe"]
 );
 
+console.log("FFMPEG STATIC PATH:", ffmpegPath);
 console.log("FFMPEG RESOLVED PATH:", resolvedFfmpegPath);
+console.log("FFPROBE STATIC PATH:", ffprobeStatic.path);
 console.log("FFPROBE RESOLVED PATH:", resolvedFfprobePath);
 
 ffmpeg.setFfmpegPath(resolvedFfmpegPath);
@@ -118,6 +137,18 @@ function trimClip(
   });
 }
 
+async function cleanupTempClips(tempClips: string[]) {
+  await Promise.all(
+    tempClips.map(async (clipPath) => {
+      try {
+        await fs.promises.unlink(clipPath);
+      } catch {
+        // Best-effort cleanup only.
+      }
+    })
+  );
+}
+
 export async function renderVideo(
   clips: ClipInput[],
   outputPath: string,
@@ -143,24 +174,28 @@ export async function renderVideo(
     tempClips.push(tempPath);
   }
 
-  await new Promise<void>((resolve, reject) => {
-    const command = ffmpeg();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const command = ffmpeg();
 
-    for (const clipPath of tempClips) {
-      command.input(clipPath);
-    }
+      for (const clipPath of tempClips) {
+        command.input(clipPath);
+      }
 
-    command
-      .on("start", (cmd) => console.log("FFmpeg started:", cmd))
-      .on("end", () => resolve())
-      .on("error", (error, _stdout, stderr) => {
-        const details = stderr?.trim();
-        reject(
-          new Error(details ? `${error.message}\n${details}` : error.message)
-        );
-      })
-      .mergeToFile(outputPath, tempDir);
-  });
+      command
+        .on("start", (cmd) => console.log("FFmpeg started:", cmd))
+        .on("end", () => resolve())
+        .on("error", (error, _stdout, stderr) => {
+          const details = stderr?.trim();
+          reject(
+            new Error(details ? `${error.message}\n${details}` : error.message)
+          );
+        })
+        .mergeToFile(outputPath, tempDir);
+    });
 
-  console.log("Render complete:", outputPath);
+    console.log("Render complete:", outputPath);
+  } finally {
+    await cleanupTempClips(tempClips);
+  }
 }

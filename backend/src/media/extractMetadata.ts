@@ -7,6 +7,16 @@ import { MediaFile } from "../types/media.types";
 
 function resolveFfprobePath() {
   const staticPath = ffprobeStatic.path;
+  const resourcesPath =
+    (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
+
+  if (resourcesPath) {
+    const directPath = path.join(resourcesPath, "bin", "ffprobe.exe");
+
+    if (fs.existsSync(directPath)) {
+      return directPath;
+    }
+  }
 
   const unpackedPath = staticPath.replace(
     /app\.asar/g,
@@ -16,9 +26,6 @@ function resolveFfprobePath() {
   if (fs.existsSync(unpackedPath)) {
     return unpackedPath;
   }
-
-  const resourcesPath =
-  (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
 
   if (resourcesPath) {
     const manualPath = path.join(
