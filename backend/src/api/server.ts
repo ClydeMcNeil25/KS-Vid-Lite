@@ -8,7 +8,7 @@ import { createAutoEdit } from "../pipeline/createAutoEdit";
 const app = express();
 const PORT = process.env.PORT || 3001;
 const uploadsDir = path.resolve(process.cwd(), "uploads");
-const rendersDir = path.resolve(process.cwd(), "test-assets");
+const rendersDir = path.resolve(process.cwd(), "..", "output");
 
 fs.mkdirSync(uploadsDir, { recursive: true });
 fs.mkdirSync(rendersDir, { recursive: true });

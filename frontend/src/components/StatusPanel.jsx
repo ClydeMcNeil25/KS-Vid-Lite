@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import HelpTooltip from './HelpTooltip.jsx';
 import styles from '../styles/StatusPanel.module.css';
 
 const SBAR_VARIANT = {
@@ -42,6 +43,7 @@ function ResultMeta({ data }) {
 }
 
 export default function StatusPanel({
+  helpEnabled,
   renderState,
   statusLabel,
   statusMsg,
@@ -80,16 +82,22 @@ export default function StatusPanel({
 
       <div className="pb">
         {/* Status bar */}
-        <div className={`${styles.sbar} ${SBAR_VARIANT[renderState] || ''}`}>
-          <div
-            className={`${styles.slabel} ${
-              SLABEL_VARIANT[renderState] || styles.slabelIdle
-            }`}
-          >
-            {statusLabel}
+        <HelpTooltip
+          enabled={helpEnabled}
+          content="This is the live render state. Watch here for success, failure, and backend status messages during each run."
+          block
+        >
+          <div className={`${styles.sbar} ${SBAR_VARIANT[renderState] || ''}`}>
+            <div
+              className={`${styles.slabel} ${
+                SLABEL_VARIANT[renderState] || styles.slabelIdle
+              }`}
+            >
+              {statusLabel}
+            </div>
+            <div className={styles.smsg}>{statusMsg}</div>
           </div>
-          <div className={styles.smsg}>{statusMsg}</div>
-        </div>
+        </HelpTooltip>
 
         {/* Progress */}
         {progressVisible && (
@@ -108,7 +116,13 @@ export default function StatusPanel({
         {/* Result meta */}
         {showResult && (
           <div className={styles.resPanel}>
-            <div className="fl">Result</div>
+            <HelpTooltip
+              enabled={helpEnabled}
+              content="This summarizes the last successful render, including where the output went and whether validation passed."
+              block
+            >
+              <div className="fl">Result</div>
+            </HelpTooltip>
             <ResultMeta data={result} />
           </div>
         )}
@@ -117,7 +131,13 @@ export default function StatusPanel({
 
         {/* Request JSON preview */}
         <div className="field">
-          <div className="fl">Request JSON</div>
+          <HelpTooltip
+            enabled={helpEnabled}
+            content="This shows the exact request payload the frontend is preparing to send to the backend."
+            block
+          >
+            <div className="fl">Request JSON</div>
+          </HelpTooltip>
           <div className={styles.reqPre}>
             {JSON.stringify(payload, null, 2)}
           </div>
@@ -125,7 +145,13 @@ export default function StatusPanel({
 
         {/* Log */}
         <div className="field">
-          <div className="fl">Log</div>
+          <HelpTooltip
+            enabled={helpEnabled}
+            content="The log records recent events like file picks, backend reachability, render starts, errors, and successful saves."
+            block
+          >
+            <div className="fl">Log</div>
+          </HelpTooltip>
           <div className={styles.log} ref={logRef}>
             {logs.map((l, i) => (
               <div key={i} className={styles.ll}>

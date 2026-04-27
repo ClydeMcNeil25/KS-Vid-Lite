@@ -22,6 +22,7 @@ import {
 const DEFAULT_OUTPUT =
   'D:/Dropbox/05 Development/KS-Vid-Lite/backend/test-assets/api-test-output.mp4';
 const OUTPUT_PATH_STORAGE_KEY = 'ks-vid-lite-output-path';
+const HELP_MODE_STORAGE_KEY = 'ks-vid-lite-help-enabled';
 
 function nowStamp() {
   const n = new Date();
@@ -37,6 +38,7 @@ export default function App() {
   const [outputHandle, setOutputHandle] = useState(null);
   const [outputHandleName, setOutputHandleName] = useState('');
   const [captions, setCaptions] = useState([]);
+  const [helpEnabled, setHelpEnabled] = useState(true);
   const captionIdRef = useRef(0);
 
   // ----- Config -----
@@ -277,6 +279,11 @@ export default function App() {
       setOutputPath(storedOutputPath);
     }
 
+    const storedHelpMode = window.localStorage.getItem(HELP_MODE_STORAGE_KEY);
+    if (storedHelpMode !== null) {
+      setHelpEnabled(storedHelpMode === 'true');
+    }
+
     let cancelled = false;
     (async () => {
       const ok = await pingBackend(2000);
@@ -314,15 +321,24 @@ export default function App() {
     window.localStorage.setItem(OUTPUT_PATH_STORAGE_KEY, outputPath);
   }, [outputPath]);
 
+  useEffect(() => {
+    window.localStorage.setItem(HELP_MODE_STORAGE_KEY, String(helpEnabled));
+  }, [helpEnabled]);
+
   return (
     <div className="shell">
-      <Header apiOnline={apiOnline} />
+      <Header
+        apiOnline={apiOnline}
+        helpEnabled={helpEnabled}
+        onToggleHelp={() => setHelpEnabled((prev) => !prev)}
+      />
       <div className="body">
         <SourcesPanel
           pickedFiles={pickedFiles}
           outputPath={outputPath}
           outputHandleName={outputHandleName}
           canPickOutput={supportsFileSystemAccess()}
+          helpEnabled={helpEnabled}
           captions={captions}
           onAddPickedFiles={addPickedFiles}
           onRemovePickedFile={removePickedFile}
@@ -339,6 +355,7 @@ export default function App() {
           targetDuration={targetDuration}
           enableOverlays={enableOverlays}
           enableCaptions={enableCaptions}
+          helpEnabled={helpEnabled}
           renderState={renderState}
           result={result}
           onSetStyle={setStyle}
@@ -349,6 +366,7 @@ export default function App() {
           onRender={startRender}
         />
         <StatusPanel
+          helpEnabled={helpEnabled}
           renderState={renderState}
           statusLabel={statusLabel}
           statusMsg={statusMsg}

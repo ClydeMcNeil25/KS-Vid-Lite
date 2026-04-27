@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import HelpTooltip from './HelpTooltip.jsx';
 import styles from '../styles/SourcesPanel.module.css';
 
 function FileIcon() {
@@ -15,6 +16,7 @@ export default function SourcesPanel({
   outputPath,
   outputHandleName,
   canPickOutput,
+  helpEnabled,
   captions,
   onAddPickedFiles,
   onRemovePickedFile,
@@ -54,15 +56,26 @@ export default function SourcesPanel({
       <div className="pb">
         {/* Input files */}
         <div className="field">
-          <label className="fl">Source videos</label>
+          <HelpTooltip
+            enabled={helpEnabled}
+            content="Choose the video clips you want the editor to cut together. You can pick one clip or several clips for the render."
+            block
+          >
+            <label className="fl">Source videos</label>
+          </HelpTooltip>
           <div className={styles.buttonRow}>
-            <button
-              className={`btn-add ${styles.primaryBrowseBtn}`}
-              onClick={() => fileInputRef.current?.click()}
-              type="button"
+            <HelpTooltip
+              enabled={helpEnabled}
+              content="Open your computer's file picker and add the source videos for this render."
             >
-              + Browse video files
-            </button>
+              <button
+                className={`btn-add ${styles.primaryBrowseBtn}`}
+                onClick={() => fileInputRef.current?.click()}
+                type="button"
+              >
+                + Browse video files
+              </button>
+            </HelpTooltip>
             <input
               ref={fileInputRef}
               className={styles.hiddenInput}
@@ -79,22 +92,29 @@ export default function SourcesPanel({
 
         <div className={styles.fileList}>
           {pickedFiles.map((file, i) => (
-            <div key={`${file.name}-${file.lastModified}-${i}`} className={styles.fpill}>
-              <div className={styles.fpillIco}>
-                <FileIcon />
+            <HelpTooltip
+              key={`${file.name}-${file.lastModified}-${i}`}
+              enabled={helpEnabled}
+              content="This clip is queued for the next render. Use the X button to remove it."
+              block
+            >
+              <div className={styles.fpill}>
+                <div className={styles.fpillIco}>
+                  <FileIcon />
+                </div>
+                <span className={styles.fpillPath} title={file.name}>
+                  {file.name}
+                </span>
+                <span className={styles.fileTag}>upload</span>
+                <button
+                  className={styles.fpillRm}
+                  onClick={() => onRemovePickedFile(i)}
+                  aria-label="Remove file"
+                >
+                  &#10005;
+                </button>
               </div>
-              <span className={styles.fpillPath} title={file.name}>
-                {file.name}
-              </span>
-              <span className={styles.fileTag}>upload</span>
-              <button
-                className={styles.fpillRm}
-                onClick={() => onRemovePickedFile(i)}
-                aria-label="Remove file"
-              >
-                &#10005;
-              </button>
-            </div>
+            </HelpTooltip>
           ))}
         </div>
 
@@ -102,43 +122,71 @@ export default function SourcesPanel({
 
         {/* Output path */}
         <div className="field">
-          <label className="fl">Output destination</label>
+          <HelpTooltip
+            enabled={helpEnabled}
+            content="Pick where the final rendered video should go. You can remember a browser-selected destination or let the app fall back to the output folder."
+            block
+          >
+            <label className="fl">Output destination</label>
+          </HelpTooltip>
           {canPickOutput && (
             <div className={styles.buttonRow}>
-              <button
-                className={`btn-add ${styles.primaryBrowseBtn}`}
-                onClick={onChooseOutputFile}
-                type="button"
+              <HelpTooltip
+                enabled={helpEnabled}
+                content="Choose the final MP4 file destination. The app can remember this destination for future renders."
               >
-                + Choose output file
-              </button>
-              {outputHandleName && (
                 <button
-                  className={`btn-add ${styles.secondaryActionBtn}`}
-                  onClick={onClearOutputTarget}
+                  className={`btn-add ${styles.primaryBrowseBtn}`}
+                  onClick={onChooseOutputFile}
                   type="button"
                 >
-                  Clear saved target
+                  + Choose output file
                 </button>
+              </HelpTooltip>
+              {outputHandleName && (
+                <HelpTooltip
+                  enabled={helpEnabled}
+                  content="Forget the remembered output destination so future renders fall back to the default output folder or a new chosen file."
+                >
+                  <button
+                    className={`btn-add ${styles.secondaryActionBtn}`}
+                    onClick={onClearOutputTarget}
+                    type="button"
+                  >
+                    Clear saved target
+                  </button>
+                </HelpTooltip>
               )}
             </div>
           )}
           {outputHandleName && (
-            <div className={styles.outputTargetCard}>
-              <span className={styles.outputTargetLabel}>Saved output target</span>
-              <span className={styles.outputTargetName}>{outputHandleName}</span>
-            </div>
+            <HelpTooltip
+              enabled={helpEnabled}
+              content="This is the remembered output file that new renders will save into when the manual override field stays blank."
+              block
+            >
+              <div className={styles.outputTargetCard}>
+                <span className={styles.outputTargetLabel}>Saved output target</span>
+                <span className={styles.outputTargetName}>{outputHandleName}</span>
+              </div>
+            </HelpTooltip>
           )}
-          <input
-            className="fi"
-            placeholder="Optional manual backend path override"
-            value={outputPath}
-            onChange={(e) => onSetOutputPath(e.target.value)}
-          />
+          <HelpTooltip
+            enabled={helpEnabled}
+            content="Advanced override: type a specific backend output path for this render only. Leave this blank for the remembered output file or the default output folder."
+            block
+          >
+            <input
+              className="fi"
+              placeholder="Optional manual backend path override"
+              value={outputPath}
+              onChange={(e) => onSetOutputPath(e.target.value)}
+            />
+          </HelpTooltip>
           <p className={styles.helperText}>
             If you choose an output file above, the app will remember it and
             save future renders there. If this field is blank and no output
-            file is selected, the backend auto-saves into `backend/test-assets`.
+            file is selected, the backend auto-saves into `KS-Vid-Lite/output`.
           </p>
         </div>
 
@@ -146,7 +194,13 @@ export default function SourcesPanel({
 
         {/* Captions */}
         <div className="field">
-          <label className="fl">Captions</label>
+          <HelpTooltip
+            enabled={helpEnabled}
+            content="Add timed captions manually. Each caption entry controls the text plus the start and end time where it should appear."
+            block
+          >
+            <label className="fl">Captions</label>
+          </HelpTooltip>
           <div className={styles.capList}>
             {captions.map((c) => (
               <div key={c.id} className={styles.cc}>
@@ -197,12 +251,17 @@ export default function SourcesPanel({
               </div>
             ))}
           </div>
-          <button
-            className={`btn-add ${styles.addCapBtn}`}
-            onClick={onAddCaption}
+          <HelpTooltip
+            enabled={helpEnabled}
+            content="Create a new caption row so you can type the caption text and timing."
           >
-            + Add caption
-          </button>
+            <button
+              className={`btn-add ${styles.addCapBtn}`}
+              onClick={onAddCaption}
+            >
+              + Add caption
+            </button>
+          </HelpTooltip>
         </div>
       </div>
     </div>
