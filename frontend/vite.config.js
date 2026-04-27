@@ -7,5 +7,15 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
     open: false,
+    proxy: {
+      '/auto-edit': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/health': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
 });

@@ -1,15 +1,18 @@
 /**
- * KS-Vid-Lite — backend API client.
+ * KS-Vid-Lite backend API client.
  *
- * The Express backend listens on http://localhost:3001/auto-edit.
- * Make sure CORS is enabled on the backend (e.g.
- *   import cors from 'cors';
- *   app.use(cors({ origin: '*' }));
- * ) so the dev server (Vite, port 5173) can talk to it.
+ * In Vite dev, requests go through the dev proxy so the frontend can call
+ * same-origin endpoints like `/auto-edit` and `/health`.
+ *
+ * For non-dev environments, `VITE_API_BASE` can point at a deployed backend.
  */
 
-export const API_BASE = 'http://localhost:3001';
+const API_BASE =
+  import.meta.env.VITE_API_BASE ??
+  (import.meta.env.DEV ? '' : 'http://localhost:3001');
+
 export const RENDER_ENDPOINT = `${API_BASE}/auto-edit`;
+export const HEALTH_ENDPOINT = `${API_BASE}/health`;
 
 /**
  * POST a render payload to the backend.
@@ -22,19 +25,20 @@ export async function renderVideo(payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+
   return res.json();
 }
 
 /**
- * Lightweight reachability probe — sends a 2s OPTIONS preflight to the
- * render endpoint. Resolves true if the backend responds, false otherwise.
+ * Lightweight reachability probe against the backend health endpoint.
  */
 export async function pingBackend(timeoutMs = 2000) {
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+
   try {
-    await fetch(RENDER_ENDPOINT, { method: 'OPTIONS', signal: ctrl.signal });
-    return true;
+    const res = await fetch(HEALTH_ENDPOINT, { signal: ctrl.signal });
+    return res.ok;
   } catch {
     return false;
   } finally {
