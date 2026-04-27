@@ -43,6 +43,143 @@ KS-Vid-Lite is the foundation for a broader ecosystem of creator tools under Kru
 
 # KS-Vid-Lite — Devlog
 
+# 🚀 KS-Vid-Lite Devlog — v1.0B (Beta)
+
+## 📌 Status
+
+KS-Vid-Lite has officially progressed from **Alpha → Beta**.
+
+The core system is now fully operational with a working desktop experience, integrated UI, and automated video editing pipeline.
+
+---
+
+## 🧠 Major Milestone
+
+This update marks the transition from a development tool into a **packaged application experience**.
+
+Users can now launch KS-Vid-Lite as a desktop app without manually starting backend/frontend services.
+
+---
+
+## 🎬 Key Features Implemented
+
+### 🧩 Core Engine
+
+* Automated video editing pipeline
+* Style-based editing presets (viral, cinematic, podcast, clean)
+* Timeline generation with speech-aware logic
+* Clip trimming and stitching via FFmpeg
+* Caption chunking and overlay system
+
+---
+
+### 🧠 Smart Editing Systems
+
+* Speech-driven timeline generation
+* Silence detection integration
+* Caption word chunking + highlighting
+* Style-based pacing and behavior
+
+---
+
+### ⚙️ Backend + API
+
+* Express server with structured API endpoints
+* `POST /auto-edit` fully functional
+* Validation system (strict / smart / free modes)
+* Modular pipeline architecture
+* Progress logging system (stage-based)
+
+---
+
+### 🎨 Frontend (UI/UX)
+
+* React + Vite interface
+* Creator-focused workflow layout
+* Source panel, timeline interaction, and status feedback
+* API integration with backend rendering pipeline
+
+---
+
+### 🖥️ Desktop Application (NEW)
+
+* Electron-based desktop wrapper
+* Launches backend + frontend automatically
+* No browser or manual setup required
+* Maximized application window on launch
+
+---
+
+### ✨ Branding & Experience (NEW)
+
+* Custom splash screen
+* Animated loading indicator
+* Integrated KS logo on startup
+* Transition from splash → app window
+
+---
+
+## ⚠️ Known Limitations
+
+* No installer (.exe) yet — app runs in dev-mode Electron
+* Some large test assets still present (cleanup ongoing)
+* No GPU acceleration (CPU-only rendering)
+* Advanced motion/energy detection not implemented
+* Timeline segmentation improvements planned
+* File path handling still local-based (no upload UI yet)
+
+---
+
+## 🧪 Beta Testing Focus
+
+Testers should focus on:
+
+* App launch stability
+* Backend + frontend startup consistency
+* Render success/failure rates
+* Caption behavior and timing
+* Output file correctness
+* Editing quality across styles
+* UI clarity and usability
+
+---
+
+## 🛠️ Recent Fixes
+
+* Removed `node_modules` from Git tracking
+* Fixed GitHub push issues (large file handling)
+* Added `.gitignore` for clean repository management
+* Cleaned up project structure for distribution
+
+---
+
+## 🎯 Next Steps
+
+* Build Windows installer (.exe)
+* Add application icon and installer branding
+* Improve production-mode Electron startup
+* Implement real-time progress feedback in UI
+* Clean test assets from repository
+* Begin Beta feedback collection + iteration cycle
+
+---
+
+## 💬 Summary
+
+KS-Vid-Lite is now a **fully functional desktop-based AI-assisted video editing application** entering the Beta testing phase.
+
+This release establishes the foundation for:
+
+* user-facing deployment
+* iterative improvements
+* future public release
+
+---
+
+**Version:** v1.0B
+**Phase:** Beta
+**Status:** 🚀 Active Testing
+
 # 🚀 KS-Vid-Lite — Devlog (Milestone: Smart Editing + Caption System)
 
 Version: v0.9a (Pre-Alpha)
