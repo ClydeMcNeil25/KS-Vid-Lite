@@ -10,9 +10,11 @@ import { AspectRatio, OutputFps } from "../types/project.types";
 const app = express();
 const PORT = process.env.PORT || 3001;
 const uploadsDir = path.resolve(process.cwd(), "uploads");
-const rendersDir = path.resolve(process.cwd(), "..", "output");
+const tempDir = path.resolve(process.cwd(), "temp");
+const rendersDir = path.join(tempDir, "renders");
 
 fs.mkdirSync(uploadsDir, { recursive: true });
+fs.mkdirSync(tempDir, { recursive: true });
 fs.mkdirSync(rendersDir, { recursive: true });
 
 const upload = multer({
@@ -113,6 +115,27 @@ function buildDefaultOutputPath(inputFiles: string[]): string {
   return path.join(rendersDir, `${safeName}-${stamp}.mp4`);
 }
 
+function isWithinDirectory(targetPath: string, parentDir: string): boolean {
+  const relative = path.relative(parentDir, targetPath);
+  return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
+}
+
+function isManagedTemporaryFile(targetPath: string): boolean {
+  return isWithinDirectory(targetPath, tempDir) || targetPath === tempDir;
+}
+
+async function cleanupManagedTemporaryFile(targetPath: string) {
+  if (!isManagedTemporaryFile(targetPath)) {
+    return;
+  }
+
+  try {
+    await fs.promises.unlink(targetPath);
+  } catch {
+    // Best-effort cleanup only.
+  }
+}
+
 async function cleanupUploadedFiles(files: Express.Multer.File[]) {
   await Promise.all(
     files.map(async (file) => {
@@ -135,6 +158,9 @@ app.get("/health", (_req, res) => {
 app.get("/download", async (req, res) => {
   const requestedPath =
     typeof req.query.path === "string" ? req.query.path.trim() : "";
+  const deleteAfter =
+    typeof req.query.deleteAfter === "string" &&
+    req.query.deleteAfter.toLowerCase() === "true";
 
   if (!requestedPath) {
     return res.status(400).json({
@@ -155,7 +181,11 @@ app.get("/download", async (req, res) => {
       });
     }
 
-    return res.download(resolvedPath);
+    return res.download(resolvedPath, async (error) => {
+      if (!error && deleteAfter) {
+        await cleanupManagedTemporaryFile(resolvedPath);
+      }
+    });
   } catch {
     return res.status(404).json({
       success: false,
@@ -225,6 +255,7 @@ app.post("/auto-edit", async (req, res) => {
     const fps = parseFps(req.body.fps) ?? 30;
     const requestedOutputPath =
       typeof req.body.outputPath === "string" ? req.body.outputPath.trim() : "";
+    const temporaryOutput = !requestedOutputPath;
     const outputPath = requestedOutputPath || buildDefaultOutputPath(files);
     const enableOverlays = parseBoolean(req.body.enableOverlays, true);
     const captions = parseCaptions(req.body.captions);
@@ -267,6 +298,7 @@ app.post("/auto-edit", async (req, res) => {
       mode,
       style,
       outputPath,
+      temporaryOutput,
       aspectRatio,
       fps,
       enableOverlays,

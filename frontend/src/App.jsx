@@ -20,8 +20,6 @@ import {
   buildSuggestedOutputName,
 } from './utils/outputHandleStore.js';
 
-const DEFAULT_OUTPUT =
-  'D:/Dropbox/05 Development/KS-Vid-Lite/output/ks-vid-lite-render.mp4';
 const OUTPUT_PATH_STORAGE_KEY = 'ks-vid-lite-output-path';
 const HELP_MODE_STORAGE_KEY = 'ks-vid-lite-help-enabled';
 const DURATION_STEP_STORAGE_KEY = 'ks-vid-lite-fine-duration-steps';
@@ -105,6 +103,7 @@ export default function App() {
   const [progressVisible, setProgressVisible] = useState(false);
   const [result, setResult] = useState(null);
   const [renderElapsedMs, setRenderElapsedMs] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
   const [logs, setLogs] = useState([
     { ts: '00:00:00', type: 'info', msg: 'KS-Vid-Lite ready.' },
   ]);
@@ -112,6 +111,7 @@ export default function App() {
   const tickRef = useRef(null);
   const hideProgressTimerRef = useRef(null);
   const renderStartedAtRef = useRef(null);
+  const previewUrlRef = useRef('');
 
   // ----- Helpers -----
   const log = (msg, type = '') =>
@@ -121,6 +121,15 @@ export default function App() {
     setRenderState(state);
     setStatusLabel(label);
     setStatusMsg(msg);
+  };
+
+  const replacePreviewUrl = (nextUrl) => {
+    if (previewUrlRef.current?.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+
+    previewUrlRef.current = nextUrl || '';
+    setPreviewUrl(nextUrl || '');
   };
 
   // ----- Sources actions -----
@@ -254,25 +263,55 @@ export default function App() {
       mode,
       style,
       fps,
-      outputPath: outputPath.trim() || DEFAULT_OUTPUT,
+      outputPath: outputPath.trim(),
       enableOverlays,
       captions: normalizedCaptions,
     };
   };
 
-  const persistRenderedOutput = async (resultOutputPath) => {
-    if (!outputHandle) return;
+  const prepareRenderedPreview = async (resultData) => {
+    const resultOutputPath = resultData?.result?.outputPath;
+    const temporaryOutput = resultData?.result?.temporaryOutput;
 
-    const permitted = await hasOutputHandlePermission(outputHandle);
-    if (!permitted) {
-      throw new Error(
-        'Saved output permission expired. Choose the output file again, then rerun the render.',
-      );
+    if (!resultOutputPath || !temporaryOutput) {
+      replacePreviewUrl('');
+      return resultData;
     }
 
-    const renderedBlob = await downloadRenderedVideo(resultOutputPath);
-    await writeBlobToHandle(outputHandle, renderedBlob);
-    log(`Saved render to ${outputHandle.name}`, 'ok');
+    if (outputHandle && !outputPath.trim()) {
+      const permitted = await hasOutputHandlePermission(outputHandle);
+      if (!permitted) {
+        throw new Error(
+          'Saved output permission expired. Choose the output file again, then rerun the render.',
+        );
+      }
+    }
+
+    const renderedBlob = await downloadRenderedVideo(resultOutputPath, {
+      deleteAfter: true,
+    });
+
+    if (outputHandle && !outputPath.trim()) {
+      await writeBlobToHandle(outputHandle, renderedBlob);
+      log(`Saved render to ${outputHandle.name}`, 'ok');
+    } else {
+      log('No output destination selected. Keeping the finished render as an in-app preview only.', 'info');
+    }
+
+    replacePreviewUrl(URL.createObjectURL(renderedBlob));
+
+    const outputPathDisplay =
+      outputHandle && !outputPath.trim()
+        ? outputHandle.name
+        : 'Temporary preview only';
+
+    return {
+      ...resultData,
+      result: {
+        ...resultData.result,
+        outputPathDisplay,
+      },
+    };
   };
 
   // ----- Render lifecycle -----
@@ -297,6 +336,7 @@ export default function App() {
     setProgressVisible(true);
     setProgress(10);
     setResult(null);
+    replacePreviewUrl('');
     setRenderElapsedMs(null);
     renderStartedAtRef.current = Date.now();
     setStatus('loading', 'RENDERING', 'Sending to FFmpeg pipeline...');
@@ -320,17 +360,15 @@ export default function App() {
       setRenderElapsedMs(elapsedMs);
 
       if (data && data.success) {
-        if (data.result?.outputPath && outputHandle && !outputPath.trim()) {
-          await persistRenderedOutput(data.result.outputPath);
-        }
+        const preparedResult = await prepareRenderedPreview(data);
         setStatus(
           'success',
           'COMPLETE',
           `Render finished in ${formatElapsed(elapsedMs)}.`,
         );
-        log('Done -> ' + (data.result?.outputPath || ''), 'ok');
+        log('Done -> ' + (preparedResult.result?.outputPathDisplay || preparedResult.result?.outputPath || ''), 'ok');
         log(`Render completed in ${formatElapsed(elapsedMs)}`, 'ok');
-        setResult(data);
+        setResult(preparedResult);
       } else {
         const e = getRenderGuidance(data);
         setStatus('error', 'FAILED', e);
@@ -406,6 +444,9 @@ export default function App() {
 
     return () => {
       cancelled = true;
+      if (previewUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
       if (tickRef.current) clearInterval(tickRef.current);
       if (hideProgressTimerRef.current)
         clearTimeout(hideProgressTimerRef.current);
@@ -477,6 +518,7 @@ export default function App() {
           helpEnabled={helpEnabled}
           renderState={renderState}
           result={result}
+          previewUrl={previewUrl}
           onSetAspectRatio={setAspectRatio}
           onSetStyle={setStyle}
           onSetMode={setMode}

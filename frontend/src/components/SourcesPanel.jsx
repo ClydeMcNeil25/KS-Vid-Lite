@@ -133,7 +133,7 @@ export default function SourcesPanel({
         <div className="field">
           <HelpTooltip
             enabled={helpEnabled}
-            content="Pick where the final rendered video should go. You can remember a browser-selected destination or let the app fall back to the output folder."
+            content="Pick where the final rendered video should go. You can remember a browser-selected destination or type a one-time backend output path override."
             block
           >
             <label className="fl">Output destination</label>
@@ -155,7 +155,7 @@ export default function SourcesPanel({
               {outputHandleName && (
                 <HelpTooltip
                   enabled={helpEnabled}
-                  content="Forget the remembered output destination so future renders fall back to the default output folder or a new chosen file."
+                  content="Forget the remembered output destination so future renders use a new chosen file or stay temporary until you save them."
                 >
                   <button
                     className={`btn-add ${styles.secondaryActionBtn}`}
@@ -184,7 +184,7 @@ export default function SourcesPanel({
           )}
           <HelpTooltip
             enabled={helpEnabled}
-            content="Advanced override: type a specific backend output path for this render only. Leave this blank for the remembered output file or the default output folder."
+            content="Advanced override: type a specific backend output path for this render only. Leave this blank to use the remembered output file or keep the backend render temporary."
             block
           >
             <input
@@ -197,7 +197,8 @@ export default function SourcesPanel({
           <p className={styles.helperText}>
             If you choose an output file above, the app will remember it and
             save future renders there. If this field is blank and no output
-            file is selected, the backend auto-saves into `KS-Vid-Lite/output`.
+            file is selected, the backend render stays temporary and is cleaned
+            up once it is no longer needed.
           </p>
         </div>
 

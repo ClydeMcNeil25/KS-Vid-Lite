@@ -60,9 +60,13 @@ export async function pingBackend(timeoutMs = 2000) {
   }
 }
 
-export async function downloadRenderedVideo(outputPath) {
+export async function downloadRenderedVideo(outputPath, options = {}) {
+  const { deleteAfter = false } = options;
   const res = await fetch(
-    buildBackendUrl(DOWNLOAD_ENDPOINT, { path: outputPath })
+    buildBackendUrl(DOWNLOAD_ENDPOINT, {
+      path: outputPath,
+      deleteAfter: deleteAfter ? "true" : undefined,
+    })
   );
 
   if (!res.ok) {

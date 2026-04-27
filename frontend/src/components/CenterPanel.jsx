@@ -37,15 +37,15 @@ function PreviewIdle() {
   );
 }
 
-function PreviewSuccess({ outputPath }) {
-  const previewUrl = getPreviewVideoUrl(outputPath);
+function PreviewSuccess({ outputPath, previewUrl }) {
+  const resolvedPreviewUrl = previewUrl || getPreviewVideoUrl(outputPath);
 
   return (
     <div className={styles.previewPlayerWrap}>
       <video
-        key={previewUrl}
+        key={resolvedPreviewUrl}
         className={styles.previewVideo}
-        src={previewUrl}
+        src={resolvedPreviewUrl}
         controls
         preload="metadata"
       />
@@ -71,6 +71,7 @@ export default function CenterPanel({
   helpEnabled,
   renderState,
   result,
+  previewUrl,
   onSetAspectRatio,
   onSetStyle,
   onSetMode,
@@ -109,7 +110,10 @@ export default function CenterPanel({
           style={{ aspectRatio: previewAspectRatio }}
         >
           {success ? (
-            <PreviewSuccess outputPath={result.result.outputPath} />
+            <PreviewSuccess
+              outputPath={result.result.outputPathDisplay || result.result.outputPath}
+              previewUrl={previewUrl}
+            />
           ) : (
             <PreviewIdle />
           )}

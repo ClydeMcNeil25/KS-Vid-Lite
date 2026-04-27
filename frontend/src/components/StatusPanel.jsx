@@ -25,7 +25,7 @@ function ResultMeta({ data, renderElapsedMs }) {
   const r = data?.result;
   if (!r) return null;
   const items = [
-    { l: 'Output', v: r.outputPath || '-' },
+    { l: 'Output', v: r.outputPathDisplay || r.outputPath || '-' },
     { l: 'Stage', v: data.stage || '-' },
     { l: 'Clips', v: r.media ? r.media.length : '-' },
     { l: 'Valid', v: r.validation ? 'pass' : '-' },

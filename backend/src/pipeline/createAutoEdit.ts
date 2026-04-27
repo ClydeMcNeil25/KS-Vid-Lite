@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 import { importMedia } from "../media/importMedia";
 import { validateDuration } from "../duration/validateDuration";
@@ -24,6 +25,7 @@ export interface CreateAutoEditInput {
   mode: DurationMode;
   style: EditStyleId;
   outputPath: string;
+  temporaryOutput?: boolean;
   aspectRatio?: AspectRatio;
   fps?: OutputFps;
   enableOverlays?: boolean;
@@ -34,6 +36,7 @@ export interface CreateAutoEditInput {
 export interface CreateAutoEditResult {
   success: boolean;
   outputPath?: string;
+  temporaryOutput?: boolean;
   media?: MediaFile[];
   validation: DurationValidationResult;
   timeline?: Timeline;
@@ -43,6 +46,14 @@ export interface CreateAutoEditResult {
 export async function createAutoEdit(
   input: CreateAutoEditInput
 ): Promise<CreateAutoEditResult> {
+  const cleanupPath = async (targetPath: string) => {
+    try {
+      await fs.promises.unlink(targetPath);
+    } catch {
+      // Best-effort cleanup only.
+    }
+  };
+
   const report = (stage: PipelineProgress["stage"], message: string) => {
     input.onProgress?.({ stage, message });
     console.log(`[${stage}] ${message}`);
@@ -92,41 +103,46 @@ export async function createAutoEdit(
     );
 
     if (input.enableOverlays) {
-      report("rendering_base_video", "Rendering base video...");
+      try {
+        report("rendering_base_video", "Rendering base video...");
 
-      await renderVideo(timeline.clips, baseRenderPath, {
-        aspectRatio: input.aspectRatio,
-        fps: input.fps
-      });
+        await renderVideo(timeline.clips, baseRenderPath, {
+          aspectRatio: input.aspectRatio,
+          fps: input.fps
+        });
 
-      report("processing_captions", "Processing captions...");
+        report("processing_captions", "Processing captions...");
 
-      const styledCaptions = input.captions?.length
-        ? chunkCaptions(input.captions, {
-            maxWordsPerChunk: config.captions.maxWordsPerChunk,
-            uppercase: config.captions.uppercase
-          })
-        : [];
+        const styledCaptions = input.captions?.length
+          ? chunkCaptions(input.captions, {
+              maxWordsPerChunk: config.captions.maxWordsPerChunk,
+              uppercase: config.captions.uppercase
+            })
+          : [];
 
-      report("building_overlays", "Building text overlays...");
+        report("building_overlays", "Building text overlays...");
 
-      const overlays = styledCaptions.length
-        ? buildCaptionOverlays(styledCaptions, input.style)
-        : buildClipLabelOverlays(timeline);
+        const overlays = styledCaptions.length
+          ? buildCaptionOverlays(styledCaptions, input.style)
+          : buildClipLabelOverlays(timeline);
 
-      report("burning_overlays", "Burning overlays into final video...");
+        report("burning_overlays", "Burning overlays into final video...");
 
-      await burnTextOverlays(baseRenderPath, input.outputPath, overlays);
+        await burnTextOverlays(baseRenderPath, input.outputPath, overlays);
 
-      report("complete", "Auto-edit complete.");
+        report("complete", "Auto-edit complete.");
 
-      return {
-        success: true,
-        outputPath: input.outputPath,
-        media,
-        validation,
-        timeline
-      };
+        return {
+          success: true,
+          outputPath: input.outputPath,
+          temporaryOutput: input.temporaryOutput ?? false,
+          media,
+          validation,
+          timeline
+        };
+      } finally {
+        await cleanupPath(baseRenderPath);
+      }
     }
 
     report("rendering_final_video", "Rendering final video...");
@@ -141,12 +157,17 @@ export async function createAutoEdit(
     return {
       success: true,
       outputPath: input.outputPath,
+      temporaryOutput: input.temporaryOutput ?? false,
       media,
       validation,
       timeline
     };
   } catch (error) {
     console.error("[error] Auto-edit pipeline failed:", error);
+
+    if (input.temporaryOutput) {
+      await cleanupPath(input.outputPath);
+    }
 
     return {
       success: false,
