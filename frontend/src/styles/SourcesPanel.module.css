@@ -1,0 +1,106 @@
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fpill {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 9px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-family: var(--font-m);
+}
+.fpillIco {
+  width: 20px;
+  height: 20px;
+  background: var(--bg3);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.fpillIco svg {
+  width: 10px;
+  height: 10px;
+  fill: var(--accent2);
+}
+.fpillPath {
+  color: var(--text1);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fpillRm {
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  transition: color 0.1s;
+  line-height: 1;
+}
+.fpillRm:hover {
+  color: var(--red);
+}
+
+.capList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cc {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 10px;
+}
+.ccHd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.ccTs {
+  font-size: 9px;
+  font-family: var(--font-m);
+  color: var(--accent2);
+  letter-spacing: 0.08em;
+}
+.ccRm {
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  transition: color 0.1s;
+  line-height: 1;
+}
+.ccRm:hover {
+  color: var(--red);
+}
+
+.ccText {
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.cc2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.addCapBtn {
+  margin-top: 4px;
+}

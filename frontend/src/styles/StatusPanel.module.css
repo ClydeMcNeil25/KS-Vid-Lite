@@ -1,0 +1,153 @@
+.sbar {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 10px 12px;
+}
+.sbarSuccess {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+.sbarError {
+  border-color: var(--red);
+  background: rgba(245, 101, 101, 0.08);
+}
+.sbarLoading {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.slabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.slabelSuccess {
+  color: var(--green);
+}
+.slabelError {
+  color: var(--red);
+}
+.slabelLoading {
+  color: var(--accent2);
+}
+.slabelIdle {
+  color: var(--text2);
+}
+
+.smsg {
+  font-size: 11px;
+  font-family: var(--font-m);
+  color: var(--text1);
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.progTrack {
+  height: 2px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.progFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s;
+}
+@keyframes pb {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+.progFillActive {
+  animation: pb 1.5s infinite;
+}
+
+.resPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rmeta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.rchip {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 9px;
+}
+.rchipL {
+  font-size: 9px;
+  color: var(--text2);
+  font-family: var(--font-m);
+  margin-bottom: 2px;
+}
+.rchipV {
+  font-size: 11px;
+  color: var(--text0);
+  font-family: var(--font-m);
+  word-break: break-all;
+}
+
+.log {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 10px;
+  font-family: var(--font-m);
+  font-size: 10.5px;
+  color: var(--text2);
+  height: 100px;
+  overflow-y: auto;
+  line-height: 1.7;
+  flex-shrink: 0;
+}
+.ll {
+  display: flex;
+  gap: 6px;
+}
+.lts {
+  color: var(--text2);
+  opacity: 0.45;
+  min-width: 56px;
+  flex-shrink: 0;
+}
+.lt {
+  color: var(--text1);
+}
+.ltOk {
+  color: var(--green);
+}
+.ltErr {
+  color: var(--red);
+}
+.ltInfo {
+  color: var(--accent2);
+}
+
+.reqPre {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 10px;
+  font-family: var(--font-m);
+  font-size: 10px;
+  color: var(--text2);
+  height: 90px;
+  overflow-y: auto;
+  line-height: 1.6;
+  white-space: pre;
+  flex-shrink: 0;
+}

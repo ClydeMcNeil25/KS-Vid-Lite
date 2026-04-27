@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>KS-Vid-Lite</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#0a0a0c;--bg1:#111114;--bg2:#18181d;--bg3:#22222a;
+  --border:#2e2e38;--border2:#3a3a46;
+  --text0:#f0eff8;--text1:#b8b7c8;--text2:#7a7990;
+  --accent:#7c6cfa;--accent2:#a596ff;--accent-dim:#2a2445;
+  --green:#3ecf8e;--green-dim:#0e3323;
+  --red:#f56565;
+  --r:8px;--rl:12px;
+  --font-h:'Syne',sans-serif;--font-m:'DM Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg0);color:var(--text0);font-family:var(--font-h)}
+.shell{display:flex;flex-direction:column;height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border);background:var(--bg1);flex-shrink:0;height:46px}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-icon{width:26px;height:26px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:13px;height:13px;fill:#fff}
+.logo-text{font-size:14px;font-weight:700;letter-spacing:.05em}
+.logo-badge{font-size:9px;font-family:var(--font-m);background:var(--bg3);color:var(--text2);padding:2px 6px;border-radius:4px;border:1px solid var(--border2)}
+.hstatus{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);font-family:var(--font-m)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0}
+.body{display:grid;grid-template-columns:260px 1fr 260px;flex:1;overflow:hidden;min-height:0}
+.panel{background:var(--bg1);display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.panel.left{border-right:1px solid var(--border)}
+.panel.right{border-left:1px solid var(--border)}
+.ph{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;flex-shrink:0}
+.ph-title{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text2)}
+.pb{padding:12px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1;min-height:0}
+.center{background:var(--bg0);display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.preview-zone{flex:0 0 auto;padding:16px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)}
+.preview-box{width:100%;max-width:420px;aspect-ratio:16/9;background:var(--bg2);border:1.5px dashed var(--border2);border-radius:var(--rl);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text2);position:relative;overflow:hidden}
+.preview-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 110%,rgba(124,108,250,.07) 0%,transparent 60%)}
+.pv-icon{width:38px;height:38px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border2)}
+.pv-icon svg{width:18px;height:18px;fill:var(--text2)}
+.center-config{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column}
+.cfg-row{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.render-footer{padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg1)}
+.field{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:10px;font-weight:600;color:var(--text2);letter-spacing:.1em;text-transform:uppercase}
+.fi{background:var(--bg2);border:1px solid var(--border);color:var(--text0);font-family:var(--font-m);font-size:11.5px;padding:7px 10px;border-radius:var(--r);outline:none;transition:border .15s,background .15s;width:100%}
+.fi:focus{border-color:var(--accent);background:var(--bg3)}
+.fi::placeholder{color:var(--text2);opacity:.5}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:5px 11px;border-radius:20px;border:1px solid var(--border2);font-size:11px;font-family:var(--font-m);color:var(--text1);background:var(--bg2);cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--accent);color:var(--text0)}
+.chip.on{background:var(--accent-dim);border-color:var(--accent);color:var(--accent2)}
+.trow{display:flex;align-items:center;justify-content:space-between}
+.tlabel{font-size:12px;color:var(--text1)}
+.tog{position:relative;width:34px;height:19px;cursor:pointer;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0;position:absolute}
+.tog-track{position:absolute;inset:0;background:var(--bg3);border-radius:19px;border:1px solid var(--border2);transition:all .2s}
+.tog input:checked+.tog-track{background:var(--accent);border-color:var(--accent)}
+.tog-thumb{position:absolute;width:13px;height:13px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.4);pointer-events:none}
+.tog input:checked~.tog-thumb{transform:translateX(15px)}
+.div{height:1px;background:var(--border);margin:2px 0}
+.fpill{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:6px 9px;display:flex;align-items:center;gap:7px;font-size:10.5px;font-family:var(--font-m)}
+.fpill-ico{width:20px;height:20px;background:var(--bg3);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fpill-ico svg{width:10px;height:10px;fill:var(--accent2)}
+.fpill-path{color:var(--text1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fpill-rm{background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:0;transition:color .1s;line-height:1}
+.fpill-rm:hover{color:var(--red)}
+.cc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px}
+.cc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cc-ts{font-size:9px;font-family:var(--font-m);color:var(--accent2);letter-spacing:.08em}
+.cc-rm{background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:0;transition:color .1s;line-height:1}
+.cc-rm:hover{color:var(--red)}
+.cc-2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:5px}
+.btn-render{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--font-h);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.04em}
+.btn-render:hover{background:var(--accent2)}
+.btn-render:disabled{background:var(--bg3);color:var(--text2);cursor:not-allowed}
+.btn-add{width:100%;padding:7px;background:var(--bg2);color:var(--text1);border:1px dashed var(--border2);border-radius:var(--r);font-family:var(--font-m);font-size:11px;cursor:pointer;transition:all .15s}
+.btn-add:hover{border-color:var(--accent);color:var(--accent2);background:var(--accent-dim)}
+.sbar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
+.sbar.success{border-color:var(--green);background:var(--green-dim)}
+.sbar.error{border-color:var(--red);background:rgba(245,101,101,.08)}
+.sbar.loading{border-color:var(--accent);background:var(--accent-dim)}
+.slabel{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.slabel.success{color:var(--green)}.slabel.error{color:var(--red)}.slabel.loading{color:var(--accent2)}.slabel.idle{color:var(--text2)}
+.smsg{font-size:11px;font-family:var(--font-m);color:var(--text1);word-break:break-all;line-height:1.5}
+.prog-track{height:2px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:8px}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s}
+@keyframes pb{0%,100%{opacity:1}50%{opacity:.55}}
+.prog-fill.active{animation:pb 1.5s infinite}
+.rmeta{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rchip{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 9px}
+.rchip-l{font-size:9px;color:var(--text2);font-family:var(--font-m);margin-bottom:2px}
+.rchip-v{font-size:11px;color:var(--text0);font-family:var(--font-m);word-break:break-all}
+.log{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;font-family:var(--font-m);font-size:10.5px;color:var(--text2);height:100px;overflow-y:auto;line-height:1.7;flex-shrink:0}
+.ll{display:flex;gap:6px}
+.lts{color:var(--text2);opacity:.45;min-width:56px;flex-shrink:0}
+.lt{color:var(--text1)}.lt.ok{color:var(--green)}.lt.err{color:var(--red)}.lt.info{color:var(--accent2)}
+.req-pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;font-family:var(--font-m);font-size:10px;color:var(--text2);height:90px;overflow-y:auto;line-height:1.6;white-space:pre;flex-shrink:0}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+input[type=range]{accent-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg></div>
+      <span class="logo-text">KS-VID-LITE</span>
+      <span class="logo-badge">ALPHA</span>
+    </div>
+    <div class="hstatus">
+      <div class="dot" id="apidot"></div>
+      <span id="apitext">API: localhost:3001</span>
+    </div>
+  </header>
+  <div class="body">
+    <!-- LEFT PANEL -->
+    <div class="panel left">
+      <div class="ph">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2"><path d="M15 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="ph-title">Sources</span>
+      </div>
+      <div class="pb">
+        <div class="field">
+          <label class="fl">Input file path</label>
+          <input id="file-inp" class="fi" placeholder="D:/path/to/video.mp4"/>
+        </div>
+        <button class="btn-add" onclick="addFile()">+ Add file path</button>
+        <div id="file-list" style="display:flex;flex-direction:column;gap:5px"></div>
+        <div class="div"></div>
+        <div class="field">
+          <label class="fl">Output path</label>
+          <input id="out-path" class="fi" placeholder="D:/path/output.mp4" value="D:/Dropbox/05 Development/KS-Vid-Lite/backend/test-assets/api-test-output.mp4"/>
+        </div>
+        <div class="div"></div>
+        <div class="field">
+          <label class="fl">Captions</label>
+          <div id="cap-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          <button class="btn-add" onclick="addCaption()" style="margin-top:4px">+ Add caption</button>
+        </div>
+      </div>
+    </div>
+    <!-- CENTER -->
+    <div class="center">
+      <div class="preview-zone">
+        <div class="preview-box" id="preview-box">
+          <div class="pv-icon"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg></div>
+          <span style="font-size:12px;color:var(--text2)">No output yet</span>
+          <span style="font-size:10px;color:var(--text2);opacity:.6;font-family:var(--font-m)">configure -> render</span>
+        </div>
+      </div>
+      <div class="center-config">
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)">
+          <div class="cfg-row" style="border-right:1px solid var(--border)">
+            <div class="fl">Style</div>
+            <div class="chips" id="style-group">
+              <div class="chip on" data-val="viral" onclick="selChip('style-group',this)">viral</div>
+              <div class="chip" data-val="cinematic" onclick="selChip('style-group',this)">cinematic</div>
+              <div class="chip" data-val="podcast" onclick="selChip('style-group',this)">podcast</div>
+              <div class="chip" data-val="clean" onclick="selChip('style-group',this)">clean</div>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <div class="fl">Duration mode</div>
+            <div class="chips" id="mode-group">
+              <div class="chip" data-val="strict" onclick="selChip('mode-group',this)">strict</div>
+              <div class="chip on" data-val="smart" onclick="selChip('mode-group',this)">smart</div>
+              <div class="chip" data-val="free" onclick="selChip('mode-group',this)">free</div>
+            </div>
+          </div>
+        </div>
+        <div class="cfg-row">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div class="fl">Target duration</div>
+            <span id="dur-val" style="font-size:12px;font-family:var(--font-m);color:var(--accent2)">15s</span>
+          </div>
+          <input type="range" id="dur-range" min="5" max="120" value="15" step="1" style="width:100%" oninput="document.getElementById('dur-val').textContent=this.value+'s';upd()"/>
+        </div>
+        <div class="cfg-row" style="flex-direction:row;gap:24px;align-items:center">
+          <div class="trow" style="flex:1">
+            <span class="tlabel">Enable overlays</span>
+            <label class="tog"><input type="checkbox" id="ov-tog" checked onchange="upd()"/><div class="tog-track"></div><div class="tog-thumb"></div></label>
+          </div>
+          <div style="width:1px;height:30px;background:var(--border)"></div>
+          <div class="trow" style="flex:1">
+            <span class="tlabel">Enable captions</span>
+            <label class="tog"><input type="checkbox" id="cap-tog" checked onchange="upd()"/><div class="tog-track"></div><div class="tog-thumb"></div></label>
+          </div>
+        </div>
+      </div>
+      <div class="render-footer">
+        <button class="btn-render" id="rbtn" onclick="startRender()">&#9654; &nbsp;Render</button>
+      </div>
+    </div>
+    <!-- RIGHT PANEL -->
+    <div class="panel right">
+      <div class="ph">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="ph-title">Render Status</span>
+      </div>
+      <div class="pb">
+        <div class="sbar" id="sbar">
+          <div class="slabel idle" id="slabel">IDLE</div>
+          <div class="smsg" id="smsg">Ready to render.</div>
+        </div>
+        <div id="prog-wrap" style="display:none">
+          <div class="prog-track"><div class="prog-fill active" id="prog-fill" style="width:20%"></div></div>
+        </div>
+        <div id="res-panel" style="display:none;flex-direction:column;gap:6px">
+          <div class="fl">Result</div>
+          <div class="rmeta" id="res-meta"></div>
+        </div>
+        <div class="div"></div>
+        <div class="field">
+          <div class="fl">Request JSON</div>
+          <div class="req-pre" id="req-pre"></div>
+        </div>
+        <div class="field">
+          <div class="fl">Log</div>
+          <div class="log" id="log">
+            <div class="ll"><span class="lts">00:00:00</span><span class="lt info">KS-Vid-Lite ready.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const files=[];const captions=[];let cid=0;
+function ts(){const n=new Date();return[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>x.toString().padStart(2,'0')).join(':')}
+function log(m,t=''){const el=document.getElementById('log');const d=document.createElement('div');d.className='ll';d.innerHTML=`<span class="lts">${ts()}</span><span class="lt ${t}">${m}</span>`;el.appendChild(d);el.scrollTop=el.scrollHeight}
+function addFile(){const i=document.getElementById('file-inp');const v=i.value.trim();if(!v)return;files.push(v);rfp();i.value='';upd();log('Added: '+v.split(/[/\\]/).pop(),'info')}
+document.getElementById('file-inp').addEventListener('keydown',e=>{if(e.key==='Enter')addFile()});
+function rfp(){const el=document.getElementById('file-list');el.innerHTML='';files.forEach((f,i)=>{const d=document.createElement('div');d.className='fpill';d.innerHTML=`<div class="fpill-ico"><svg viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="fpill-path" title="${f}">${f}</span><button class="fpill-rm" onclick="rmFile(${i})">&#10005;</button>`;el.appendChild(d);})}
+function rmFile(i){files.splice(i,1);rfp();upd()}
+function addCaption(){const id=++cid;captions.push({id,text:'',start:0,end:5});rcc();upd()}
+function rmCap(id){const i=captions.findIndex(c=>c.id===id);if(i>-1){captions.splice(i,1);rcc();upd()}}
+function updCap(id,f,v){const c=captions.find(c=>c.id===id);if(c){c[f]=f==='text'?v:parseFloat(v)||0;upd()}}
+function rcc(){const el=document.getElementById('cap-list');el.innerHTML='';captions.forEach(c=>{const d=document.createElement('div');d.className='cc';d.innerHTML=`<div class="cc-hd"><span class="cc-ts">CAPTION #${c.id}</span><button class="cc-rm" onclick="rmCap(${c.id})">&#10005;</button></div><input class="fi" placeholder="Caption text..." value="${c.text}" oninput="updCap(${c.id},'text',this.value)" style="width:100%;margin-bottom:5px"/><div class="cc-2"><div class="field"><label class="fl">Start (s)</label><input class="fi" type="number" min="0" value="${c.start}" oninput="updCap(${c.id},'start',this.value)"/></div><div class="field"><label class="fl">End (s)</label><input class="fi" type="number" min="0" value="${c.end}" oninput="updCap(${c.id},'end',this.value)"/></div></div>`;el.appendChild(d);})}
+function selChip(g,el){document.querySelectorAll('#'+g+' .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');upd()}
+function chipVal(g){const a=document.querySelector('#'+g+' .chip.on');return a?a.dataset.val:''}
+function payload(){const ce=document.getElementById('cap-tog').checked;return{files:[...files],targetDuration:parseInt(document.getElementById('dur-range').value),mode:chipVal('mode-group'),style:chipVal('style-group'),outputPath:document.getElementById('out-path').value.trim(),enableOverlays:document.getElementById('ov-tog').checked,captions:ce?captions.map(({text,start,end})=>({text,start,end})):[]}}
+function upd(){document.getElementById('req-pre').textContent=JSON.stringify(payload(),null,2)}
+upd();
+document.getElementById('out-path').addEventListener('input',upd);
+function setStatus(t,l,m){const b=document.getElementById('sbar');const lb=document.getElementById('slabel');const tx=document.getElementById('smsg');b.className='sbar '+t;lb.className='slabel '+t;lb.textContent=l;tx.textContent=m}
+async function startRender(){
+  const p=payload();
+  if(!p.files.length){log('No input files','err');setStatus('error','ERROR','Add at least one input file.');return}
+  if(!p.outputPath){log('No output path','err');setStatus('error','ERROR','Set an output path.');return}
+  const btn=document.getElementById('rbtn');btn.disabled=true;btn.textContent='Rendering...';
+  document.getElementById('prog-wrap').style.display='block';
+  document.getElementById('res-panel').style.display='none';
+  setStatus('loading','RENDERING','Sending to FFmpeg pipeline...');
+  log('Render - style:'+p.style+' mode:'+p.mode+' dur:'+p.targetDuration+'s','info');
+  let prog=10;const tick=setInterval(()=>{prog=Math.min(prog+Math.random()*7,88);document.getElementById('prog-fill').style.width=Math.round(prog)+'%'},700);
+  try{
+    const res=await fetch('http://localhost:3001/auto-edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    const data=await res.json();clearInterval(tick);document.getElementById('prog-fill').style.width='100%';
+    if(data.success){setStatus('success','COMPLETE','Render finished.');log('Done -> '+(data.result.outputPath||''),'ok');showResult(data)}
+    else{const e=data.error||data.message||'Unknown error';setStatus('error','FAILED',e);log('Failed: '+e,'err')}
+  }catch(e){clearInterval(tick);setStatus('error','FAILED','Cannot reach localhost:3001 - is the backend running?');log('Network error: '+e.message,'err')}
+  finally{btn.disabled=false;btn.textContent='▶  Render';setTimeout(()=>{document.getElementById('prog-wrap').style.display='none';document.getElementById('prog-fill').style.width='20%'},2500)}
+}
+function showResult(data){
+  const r=data.result;const panel=document.getElementById('res-panel');panel.style.display='flex';
+  document.getElementById('res-meta').innerHTML=[{l:'Output',v:r.outputPath||'-'},{l:'Stage',v:data.stage||'-'},{l:'Clips',v:r.media?r.media.length:'-'},{l:'Valid',v:r.validation?'pass':'-'}].map(i=>`<div class="rchip"><div class="rchip-l">${i.l}</div><div class="rchip-v">${i.v}</div></div>`).join('');
+  const pb=document.getElementById('preview-box');
+  pb.innerHTML=`<div style="text-align:center;padding:16px"><div style="font-size:28px;margin-bottom:8px">&check;</div><div style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:4px">Render complete</div><div style="font-size:10px;font-family:var(--font-m);color:var(--text2);word-break:break-all;max-width:300px;line-height:1.5">${r.outputPath||''}</div></div>`;
+  pb.style.borderColor='var(--green)';pb.style.background='var(--green-dim)';
+}
+(async()=>{
+  try{
+    const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),2000);
+    await fetch('http://localhost:3001/auto-edit',{method:'OPTIONS',signal:ctrl.signal});
+    clearTimeout(tid);log('API reachable','ok');
+  }catch(e){
+    const d=document.getElementById('apidot');d.style.background='var(--red)';d.style.boxShadow='0 0 6px var(--red)';
+    document.getElementById('apitext').textContent='API: offline';
+    log('Backend offline - start server first','err');
+  }
+})();
+</script>
+</body>
+</html>

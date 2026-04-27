@@ -1,0 +1,184 @@
+.center {
+  background: var(--bg0);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.previewZone {
+  flex: 0 0 auto;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.previewBox {
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 16 / 9;
+  background: var(--bg2);
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--rl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text2);
+  position: relative;
+  overflow: hidden;
+}
+.previewBox::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 110%,
+    rgba(124, 108, 250, 0.07) 0%,
+    transparent 60%
+  );
+}
+.previewBoxSuccess {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+
+.pvIcon {
+  width: 38px;
+  height: 38px;
+  background: var(--bg3);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border2);
+}
+.pvIcon svg {
+  width: 18px;
+  height: 18px;
+  fill: var(--text2);
+}
+
+.previewLabel {
+  font-size: 12px;
+  color: var(--text2);
+}
+.previewHint {
+  font-size: 10px;
+  color: var(--text2);
+  opacity: 0.6;
+  font-family: var(--font-m);
+}
+
+.successWrap {
+  text-align: center;
+  padding: 16px;
+}
+.successCheck {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.successText {
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.successPath {
+  font-size: 10px;
+  font-family: var(--font-m);
+  color: var(--text2);
+  word-break: break-all;
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+.centerConfig {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cfgGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--border);
+}
+
+.cfgRow {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cfgRowFirst {
+  border-right: 1px solid var(--border);
+  border-bottom: none;
+}
+.cfgRowSecond {
+  border-bottom: none;
+}
+.cfgRowToggles {
+  flex-direction: row;
+  gap: 24px;
+  align-items: center;
+}
+
+.durHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.durVal {
+  font-size: 12px;
+  font-family: var(--font-m);
+  color: var(--accent2);
+}
+.durRange {
+  width: 100%;
+}
+
+.toggleBox {
+  flex: 1;
+}
+.toggleDivider {
+  width: 1px;
+  height: 30px;
+  background: var(--border);
+}
+
+.renderFooter {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg1);
+}
+
+.btnRender {
+  width: 100%;
+  padding: 11px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r);
+  font-family: var(--font-h);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+}
+.btnRender:hover {
+  background: var(--accent2);
+}
+.btnRender:disabled {
+  background: var(--bg3);
+  color: var(--text2);
+  cursor: not-allowed;
+}
