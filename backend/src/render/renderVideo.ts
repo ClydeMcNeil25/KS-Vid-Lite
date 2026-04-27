@@ -3,6 +3,7 @@ import path from "path";
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegPath from "ffmpeg-static";
 import ffprobeStatic from "ffprobe-static";
+import { AspectRatio, OutputFps } from "../types/project.types";
 
 ffmpeg.setFfmpegPath(ffmpegPath as string);
 ffmpeg.setFfprobePath(ffprobeStatic.path);
@@ -13,9 +14,33 @@ export interface ClipInput {
   end?: number;
 }
 
-function trimClip(input: ClipInput, outputPath: string): Promise<void> {
+interface RenderFormatOptions {
+  aspectRatio?: AspectRatio;
+  fps?: OutputFps;
+}
+
+function getDimensionsForAspectRatio(
+  aspectRatio: AspectRatio = "16:9"
+): { width: number; height: number } {
+  switch (aspectRatio) {
+    case "9:16":
+      return { width: 1080, height: 1920 };
+    case "1:1":
+      return { width: 1080, height: 1080 };
+    case "16:9":
+    default:
+      return { width: 1920, height: 1080 };
+  }
+}
+
+function trimClip(
+  input: ClipInput,
+  outputPath: string,
+  format: Required<RenderFormatOptions>
+): Promise<void> {
   return new Promise((resolve, reject) => {
     let command = ffmpeg(input.path);
+    const { width, height } = getDimensionsForAspectRatio(format.aspectRatio);
 
     if (input.start !== undefined) {
       command = command.setStartTime(input.start);
@@ -26,20 +51,46 @@ function trimClip(input: ClipInput, outputPath: string): Promise<void> {
     }
 
     command
+      .videoFilters(
+        [
+          `scale=${width}:${height}:force_original_aspect_ratio=decrease`,
+          `pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:color=black`,
+          `setsar=1`,
+          `setdar=${width}/${height}`,
+          `fps=${format.fps}`
+        ].join(",")
+      )
+      .videoCodec("libx264")
+      .audioCodec("aac")
+      .outputOptions(["-pix_fmt yuv420p", "-movflags +faststart"])
       .output(outputPath)
+      .on("start", (cmd) => console.log("Trim started:", cmd))
       .on("end", () => resolve())
-      .on("error", reject)
+      .on("error", (error, _stdout, stderr) => {
+        const details = stderr?.trim();
+        reject(
+          new Error(
+            details ? `${error.message}\n${details}` : error.message
+          )
+        );
+      })
       .run();
   });
 }
 
 export async function renderVideo(
   clips: ClipInput[],
-  outputPath: string
+  outputPath: string,
+  format: RenderFormatOptions = {}
 ): Promise<void> {
   if (!clips.length) {
     throw new Error("No clips provided.");
   }
+
+  const normalizedFormat: Required<RenderFormatOptions> = {
+    aspectRatio: format.aspectRatio ?? "16:9",
+    fps: format.fps ?? 30
+  };
 
   const tempDir = path.resolve(process.cwd(), "temp");
   fs.mkdirSync(tempDir, { recursive: true });
@@ -48,7 +99,7 @@ export async function renderVideo(
 
   for (let i = 0; i < clips.length; i++) {
     const tempPath = path.join(tempDir, `trimmed-${i}.mp4`);
-    await trimClip(clips[i], tempPath);
+    await trimClip(clips[i], tempPath, normalizedFormat);
     tempClips.push(tempPath);
   }
 
@@ -62,7 +113,14 @@ export async function renderVideo(
     command
       .on("start", (cmd) => console.log("FFmpeg started:", cmd))
       .on("end", () => resolve())
-      .on("error", reject)
+      .on("error", (error, _stdout, stderr) => {
+        const details = stderr?.trim();
+        reject(
+          new Error(
+            details ? `${error.message}\n${details}` : error.message
+          )
+        );
+      })
       .mergeToFile(outputPath, tempDir);
   });
 

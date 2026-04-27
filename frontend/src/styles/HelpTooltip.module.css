@@ -9,9 +9,7 @@
 }
 
 .tooltip {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 8px);
+  position: fixed;
   min-width: 220px;
   max-width: 280px;
   padding: 10px 12px;
@@ -24,24 +22,21 @@
   font-family: var(--font-m);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
   pointer-events: none;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 0.14s ease, transform 0.14s ease;
-  z-index: 30;
+  z-index: 9999;
 }
 
 .tooltip::after {
   content: '';
   position: absolute;
-  left: 18px;
+  left: var(--tooltip-arrow-left, 18px);
   top: 100%;
   border-width: 6px;
   border-style: solid;
   border-color: rgba(16, 16, 22, 0.98) transparent transparent transparent;
 }
 
-.wrapper:hover .tooltip,
-.wrapper:focus-within .tooltip {
-  opacity: 1;
-  transform: translateY(0);
+.tooltipBottom::after {
+  top: auto;
+  bottom: 100%;
+  border-color: transparent transparent rgba(16, 16, 22, 0.98) transparent;
 }

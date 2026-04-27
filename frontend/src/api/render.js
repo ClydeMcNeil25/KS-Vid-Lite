@@ -14,6 +14,7 @@ const API_BASE =
 export const RENDER_ENDPOINT = `${API_BASE}/auto-edit`;
 export const HEALTH_ENDPOINT = `${API_BASE}/health`;
 export const DOWNLOAD_ENDPOINT = `${API_BASE}/download`;
+export const MEDIA_ENDPOINT = `${API_BASE}/media`;
 
 /**
  * POST a render payload to the backend.
@@ -58,4 +59,10 @@ export async function downloadRenderedVideo(outputPath) {
   }
 
   return res.blob();
+}
+
+export function getPreviewVideoUrl(outputPath) {
+  const url = new URL(MEDIA_ENDPOINT, window.location.origin);
+  url.searchParams.set('path', outputPath);
+  return url.toString();
 }

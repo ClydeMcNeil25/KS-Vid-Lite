@@ -11,6 +11,15 @@ function FileIcon() {
   );
 }
 
+function shortenFileName(name, maxLength = 26) {
+  if (name.length <= maxLength) return name;
+  const extIndex = name.lastIndexOf('.');
+  const ext = extIndex > 0 ? name.slice(extIndex) : '';
+  const base = extIndex > 0 ? name.slice(0, extIndex) : name;
+  const available = Math.max(8, maxLength - ext.length - 3);
+  return `${base.slice(0, available)}...${ext}`;
+}
+
 export default function SourcesPanel({
   pickedFiles,
   outputPath,
@@ -103,7 +112,7 @@ export default function SourcesPanel({
                   <FileIcon />
                 </div>
                 <span className={styles.fpillPath} title={file.name}>
-                  {file.name}
+                  {shortenFileName(file.name)}
                 </span>
                 <span className={styles.fileTag}>upload</span>
                 <button
@@ -167,7 +176,9 @@ export default function SourcesPanel({
             >
               <div className={styles.outputTargetCard}>
                 <span className={styles.outputTargetLabel}>Saved output target</span>
-                <span className={styles.outputTargetName}>{outputHandleName}</span>
+                <span className={styles.outputTargetName} title={outputHandleName}>
+                  {shortenFileName(outputHandleName, 32)}
+                </span>
               </div>
             </HelpTooltip>
           )}

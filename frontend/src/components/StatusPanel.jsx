@@ -21,7 +21,7 @@ const LT_VARIANT = {
   '': '',
 };
 
-function ResultMeta({ data }) {
+function ResultMeta({ data, renderElapsedMs }) {
   const r = data?.result;
   if (!r) return null;
   const items = [
@@ -29,6 +29,7 @@ function ResultMeta({ data }) {
     { l: 'Stage', v: data.stage || '-' },
     { l: 'Clips', v: r.media ? r.media.length : '-' },
     { l: 'Valid', v: r.validation ? 'pass' : '-' },
+    { l: 'Render time', v: renderElapsedMs ? `${(renderElapsedMs / 1000).toFixed(1)}s` : '-' },
   ];
   return (
     <div className={styles.rmeta}>
@@ -49,6 +50,7 @@ export default function StatusPanel({
   statusMsg,
   progress,
   progressVisible,
+  renderElapsedMs,
   result,
   payload,
   logs,
@@ -101,7 +103,8 @@ export default function StatusPanel({
 
         {/* Progress */}
         {progressVisible && (
-          <div>
+          <div className={styles.progressWrap}>
+            <div className={styles.progressLabel}>{Math.round(progress)}%</div>
             <div className={styles.progTrack}>
               <div
                 className={`${styles.progFill} ${
@@ -123,7 +126,7 @@ export default function StatusPanel({
             >
               <div className="fl">Result</div>
             </HelpTooltip>
-            <ResultMeta data={result} />
+            <ResultMeta data={result} renderElapsedMs={renderElapsedMs} />
           </div>
         )}
 

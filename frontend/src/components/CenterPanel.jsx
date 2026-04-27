@@ -1,8 +1,15 @@
 import HelpTooltip from './HelpTooltip.jsx';
+import { getPreviewVideoUrl } from '../api/render.js';
 import styles from '../styles/CenterPanel.module.css';
 
+const ASPECT_RATIOS = ['9:16', '1:1', '16:9'];
 const STYLES = ['viral', 'cinematic', 'podcast', 'clean'];
 const MODES = ['strict', 'smart', 'free'];
+const FPS_OPTIONS = [
+  { value: 29.97, label: '29.97 fps' },
+  { value: 30, label: '30 fps' },
+  { value: 60, label: '60 fps' },
+];
 
 function Chip({ value, current, onSelect }) {
   return (
@@ -31,29 +38,48 @@ function PreviewIdle() {
 }
 
 function PreviewSuccess({ outputPath }) {
+  const previewUrl = getPreviewVideoUrl(outputPath);
+
   return (
-    <div className={styles.successWrap}>
-      <div className={styles.successCheck}>&#10003;</div>
-      <div className={styles.successText}>Render complete</div>
-      <div className={styles.successPath}>{outputPath || ''}</div>
+    <div className={styles.previewPlayerWrap}>
+      <video
+        key={previewUrl}
+        className={styles.previewVideo}
+        src={previewUrl}
+        controls
+        preload="metadata"
+      />
+      <div className={styles.previewMeta}>
+        <div className={styles.successText}>Preview ready</div>
+        <div className={styles.successPath}>{outputPath || ''}</div>
+      </div>
     </div>
   );
 }
 
 export default function CenterPanel({
+  aspectRatio,
   style,
   mode,
+  fps,
   targetDuration,
+  fineDurationSteps,
   enableOverlays,
   enableCaptions,
+  previewExpanded,
+  previewAspectRatio,
   helpEnabled,
   renderState,
   result,
+  onSetAspectRatio,
   onSetStyle,
   onSetMode,
+  onSetFps,
   onSetTargetDuration,
+  onSetFineDurationSteps,
   onSetEnableOverlays,
   onSetEnableCaptions,
+  onTogglePreviewSize,
   onRender,
 }) {
   const success = renderState === 'success' && result?.result;
@@ -62,10 +88,25 @@ export default function CenterPanel({
   return (
     <div className={styles.center}>
       <div className={styles.previewZone}>
+        <div className={styles.previewToolbar}>
+          <HelpTooltip
+            enabled={helpEnabled}
+            content="Make the preview window larger when you want a closer look at the finished video."
+          >
+            <button
+              type="button"
+              className={styles.previewToggle}
+              onClick={onTogglePreviewSize}
+            >
+              {previewExpanded ? 'Standard Preview' : 'Larger Preview'}
+            </button>
+          </HelpTooltip>
+        </div>
         <div
           className={`${styles.previewBox} ${
             success ? styles.previewBoxSuccess : ''
-          }`}
+          } ${previewExpanded ? styles.previewBoxExpanded : ''}`}
+          style={{ aspectRatio: previewAspectRatio }}
         >
           {success ? (
             <PreviewSuccess outputPath={result.result.outputPath} />
@@ -77,27 +118,92 @@ export default function CenterPanel({
 
       <div className={styles.centerConfig}>
         <div className={styles.cfgGrid}>
-          <div className={`${styles.cfgRow} ${styles.cfgRowFirst}`}>
+          <div className={`${styles.cfgRow} ${styles.cfgGridCell}`}>
             <HelpTooltip
               enabled={helpEnabled}
-              content="Style presets shape the pacing and feel of the auto-edit. Viral is the safest fast-moving default."
+              content="Aspect ratio sets the shape of the final video frame for portrait, square, or widescreen output."
+              block
+            >
+              <div className="fl">Aspect ratio</div>
+            </HelpTooltip>
+            <div className="chips">
+              {ASPECT_RATIOS.map((value) => (
+                <HelpTooltip
+                  key={value}
+                  enabled={helpEnabled}
+                  content={
+                    value === '9:16'
+                      ? 'Portrait format for Shorts, Reels, and TikTok-style output.'
+                      : value === '1:1'
+                        ? 'Square format for balanced social posts and compact previews.'
+                        : 'Widescreen format for landscape video and traditional playback.'
+                  }
+                >
+                  <Chip
+                    value={value}
+                    current={aspectRatio}
+                    onSelect={onSetAspectRatio}
+                  />
+                </HelpTooltip>
+              ))}
+            </div>
+          </div>
+
+          <div className={`${styles.cfgRow} ${styles.cfgGridCell}`}>
+            <HelpTooltip
+              enabled={helpEnabled}
+              content="FPS controls how many frames per second the final render uses. Higher values feel smoother but can increase processing time."
+              block
+            >
+              <div className="fl">Output FPS</div>
+            </HelpTooltip>
+            <div className="chips">
+              {FPS_OPTIONS.map((option) => (
+                <HelpTooltip
+                  key={option.label}
+                  enabled={helpEnabled}
+                  content={
+                    option.value === 29.97
+                      ? 'A standard broadcast-friendly frame rate that works well for most web video.'
+                      : option.value === 30
+                        ? 'A simple default that balances smooth motion and quick renders.'
+                        : 'A smoother high-frame-rate option that works best when your source footage supports it.'
+                  }
+                >
+                  <button
+                    type="button"
+                    className={`chip ${fps === option.value ? 'on' : ''}`}
+                    onClick={() => onSetFps(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                </HelpTooltip>
+              ))}
+            </div>
+          </div>
+
+          <div className={`${styles.cfgRow} ${styles.cfgGridCell}`}>
+            <HelpTooltip
+              enabled={helpEnabled}
+              content="Style chooses the overall editing vibe and pacing for the final video."
               block
             >
               <div className="fl">Style</div>
             </HelpTooltip>
             <div className="chips">
-              {STYLES.map((v) => (
+              {STYLES.map((value) => (
                 <HelpTooltip
-                  key={v}
+                  key={value}
                   enabled={helpEnabled}
-                  content={`Use the ${v} preset to change how the edit is assembled and paced.`}
+                  content={`Use the ${value} preset to change how the edit is assembled and paced.`}
                 >
-                  <Chip value={v} current={style} onSelect={onSetStyle} />
+                  <Chip value={value} current={style} onSelect={onSetStyle} />
                 </HelpTooltip>
               ))}
             </div>
           </div>
-          <div className={`${styles.cfgRow} ${styles.cfgRowSecond}`}>
+
+          <div className={styles.cfgRow}>
             <HelpTooltip
               enabled={helpEnabled}
               content="Duration mode controls how strict the editor is about matching your target runtime."
@@ -106,19 +212,19 @@ export default function CenterPanel({
               <div className="fl">Duration mode</div>
             </HelpTooltip>
             <div className="chips">
-              {MODES.map((v) => (
+              {MODES.map((value) => (
                 <HelpTooltip
-                  key={v}
+                  key={value}
                   enabled={helpEnabled}
                   content={
-                    v === 'strict'
+                    value === 'strict'
                       ? 'Strict blocks renders when the footage does not match the target closely enough.'
-                      : v === 'smart'
+                      : value === 'smart'
                         ? 'Smart is the default. It tries to fit the footage while still preventing unrealistic renders.'
                         : 'Free removes duration blocking and lets the render continue.'
                   }
                 >
-                  <Chip value={v} current={mode} onSelect={onSetMode} />
+                  <Chip value={value} current={mode} onSelect={onSetMode} />
                 </HelpTooltip>
               ))}
             </div>
@@ -145,11 +251,29 @@ export default function CenterPanel({
               type="range"
               min="5"
               max="120"
-              step="1"
+              step={fineDurationSteps ? '1' : '5'}
               value={targetDuration}
               onChange={(e) => onSetTargetDuration(parseInt(e.target.value, 10))}
               className={styles.durRange}
             />
+          </HelpTooltip>
+          <HelpTooltip
+            enabled={helpEnabled}
+            content="Turn this on when you need one-second duration adjustments instead of the simpler five-second steps."
+            block
+          >
+            <div className={`trow ${styles.stepToggleRow}`}>
+              <span className="tlabel">Fine duration steps (1s)</span>
+              <label className="tog">
+                <input
+                  type="checkbox"
+                  checked={fineDurationSteps}
+                  onChange={(e) => onSetFineDurationSteps(e.target.checked)}
+                />
+                <div className="tog-track" />
+                <div className="tog-thumb" />
+              </label>
+            </div>
           </HelpTooltip>
         </div>
 
@@ -205,7 +329,7 @@ export default function CenterPanel({
             disabled={rendering}
             onClick={onRender}
           >
-            {rendering ? 'Rendering...' : '▶  Render'}
+            {rendering ? 'Rendering...' : '> Render'}
           </button>
         </HelpTooltip>
       </div>

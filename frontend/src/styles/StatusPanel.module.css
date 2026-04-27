@@ -52,6 +52,17 @@
   overflow: hidden;
   margin-top: 8px;
 }
+.progressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.progressLabel {
+  font-size: 10px;
+  color: var(--accent2);
+  font-family: var(--font-m);
+  text-align: right;
+}
 .progFill {
   height: 100%;
   background: var(--accent);

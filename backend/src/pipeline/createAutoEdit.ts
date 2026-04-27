@@ -9,7 +9,7 @@ import { burnTextOverlays } from "../composition/burnTextOverlays";
 import { chunkCaptions } from "../composition/chunkCaptions";
 import { buildCaptionOverlays } from "../composition/buildCaptionOverlays";
 import { getEditConfig } from "../config/editConfig";
-import { DurationMode } from "../types/project.types";
+import { AspectRatio, DurationMode, OutputFps } from "../types/project.types";
 import { Timeline } from "../types/timeline.types";
 import { DurationValidationResult } from "../types/duration.types";
 import { MediaFile } from "../types/media.types";
@@ -24,6 +24,8 @@ export interface CreateAutoEditInput {
   mode: DurationMode;
   style: EditStyleId;
   outputPath: string;
+  aspectRatio?: AspectRatio;
+  fps?: OutputFps;
   enableOverlays?: boolean;
   captions?: Caption[];
   onProgress?: (progress: PipelineProgress) => void;
@@ -92,7 +94,10 @@ export async function createAutoEdit(
     if (input.enableOverlays) {
       report("rendering_base_video", "Rendering base video...");
 
-      await renderVideo(timeline.clips, baseRenderPath);
+      await renderVideo(timeline.clips, baseRenderPath, {
+        aspectRatio: input.aspectRatio,
+        fps: input.fps
+      });
 
       report("processing_captions", "Processing captions...");
 
@@ -126,7 +131,10 @@ export async function createAutoEdit(
 
     report("rendering_final_video", "Rendering final video...");
 
-    await renderVideo(timeline.clips, input.outputPath);
+    await renderVideo(timeline.clips, input.outputPath, {
+      aspectRatio: input.aspectRatio,
+      fps: input.fps
+    });
 
     report("complete", "Auto-edit complete.");
 

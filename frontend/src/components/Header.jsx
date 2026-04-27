@@ -1,5 +1,6 @@
 import styles from '../styles/Header.module.css';
 import HelpTooltip from './HelpTooltip.jsx';
+import ksLogo from '../assets/ks-logo-purple.png';
 
 export default function Header({ apiOnline, helpEnabled, onToggleHelp }) {
   // apiOnline: null = unknown (still probing), true = reachable, false = offline.
@@ -10,9 +11,8 @@ export default function Header({ apiOnline, helpEnabled, onToggleHelp }) {
     <header className={styles.header}>
       <div className={styles.logo}>
         <div className={styles.logoIcon}>
-          <svg viewBox="0 0 24 24">
-            <path d="M5 3l14 9-14 9V3z" />
-          </svg>
+          <div className={styles.logoGlow} />
+          <img className={styles.logoImage} src={ksLogo} alt="Krucial Studios logo" />
         </div>
         <span className={styles.logoText}>KS-VID-LITE</span>
         <span className={styles.logoBadge}>ALPHA</span>

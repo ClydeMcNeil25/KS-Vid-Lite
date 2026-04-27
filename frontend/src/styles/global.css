@@ -55,7 +55,7 @@ body {
 
 .body {
   display: grid;
-  grid-template-columns: 260px 1fr 260px;
+  grid-template-columns: 320px 1fr 320px;
   flex: 1;
   overflow: hidden;
   min-height: 0;

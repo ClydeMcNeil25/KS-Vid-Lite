@@ -1,9 +1,11 @@
 import express from "express";
 import cors from "cors";
 import fs from "fs";
+import http from "http";
 import path from "path";
 import multer from "multer";
 import { createAutoEdit } from "../pipeline/createAutoEdit";
+import { AspectRatio, OutputFps } from "../types/project.types";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -46,6 +48,29 @@ function parseTargetDuration(value: unknown): number | undefined {
   if (typeof value === "string" && value.trim()) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+}
+
+function parseAspectRatio(value: unknown): AspectRatio | undefined {
+  if (value === "9:16" || value === "1:1" || value === "16:9") {
+    return value;
+  }
+
+  return undefined;
+}
+
+function parseFps(value: unknown): OutputFps | undefined {
+  if (typeof value === "number" && (value === 29.97 || value === 30 || value === 60)) {
+    return value as OutputFps;
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (parsed === 29.97 || parsed === 30 || parsed === 60) {
+      return parsed as OutputFps;
+    }
   }
 
   return undefined;
@@ -139,6 +164,39 @@ app.get("/download", async (req, res) => {
   }
 });
 
+app.get("/media", async (req, res) => {
+  const requestedPath =
+    typeof req.query.path === "string" ? req.query.path.trim() : "";
+
+  if (!requestedPath) {
+    return res.status(400).json({
+      success: false,
+      message: "path query parameter is required."
+    });
+  }
+
+  const resolvedPath = path.resolve(requestedPath);
+
+  try {
+    const stat = await fs.promises.stat(resolvedPath);
+
+    if (!stat.isFile()) {
+      return res.status(404).json({
+        success: false,
+        message: "Requested media file does not exist."
+      });
+    }
+
+    res.type(path.extname(resolvedPath) || ".mp4");
+    return res.sendFile(resolvedPath);
+  } catch {
+    return res.status(404).json({
+      success: false,
+      message: "Requested media file does not exist."
+    });
+  }
+});
+
 app.post("/auto-edit", (req, res, next) => {
   const contentType = req.headers["content-type"] ?? "";
 
@@ -163,6 +221,8 @@ app.post("/auto-edit", async (req, res) => {
       typeof req.body.mode === "string" ? req.body.mode : undefined;
     const style =
       typeof req.body.style === "string" ? req.body.style : undefined;
+    const aspectRatio = parseAspectRatio(req.body.aspectRatio) ?? "16:9";
+    const fps = parseFps(req.body.fps) ?? 30;
     const requestedOutputPath =
       typeof req.body.outputPath === "string" ? req.body.outputPath.trim() : "";
     const outputPath = requestedOutputPath || buildDefaultOutputPath(files);
@@ -207,6 +267,8 @@ app.post("/auto-edit", async (req, res) => {
       mode,
       style,
       outputPath,
+      aspectRatio,
+      fps,
       enableOverlays,
       captions
     });
@@ -234,6 +296,32 @@ app.post("/auto-edit", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`KS-Vid-Lite API running on http://localhost:${PORT}`);
 });
+
+server.on("error", (error) => {
+  console.error("KS-Vid-Lite API server error:", error);
+});
+
+server.on("close", () => {
+  console.log("KS-Vid-Lite API server closed.");
+});
+
+// Keep the local dev API process alive consistently on Windows shells.
+const keepAlive = setInterval(() => {
+  if (!(server as http.Server).listening) {
+    console.warn("Keepalive noticed the API server is not listening.");
+  }
+}, 60_000);
+
+function shutdown(signal: string) {
+  console.log(`Received ${signal}. Shutting down KS-Vid-Lite API...`);
+  clearInterval(keepAlive);
+  server.close(() => {
+    process.exit(0);
+  });
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));

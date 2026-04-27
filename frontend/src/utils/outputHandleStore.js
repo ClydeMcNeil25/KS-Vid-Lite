@@ -87,6 +87,13 @@ export async function ensureOutputHandlePermission(handle) {
   return (await handle.requestPermission(readwrite)) === 'granted';
 }
 
+export async function hasOutputHandlePermission(handle) {
+  if (!handle?.queryPermission) return false;
+
+  const readwrite = { mode: 'readwrite' };
+  return (await handle.queryPermission(readwrite)) === 'granted';
+}
+
 export async function writeBlobToHandle(handle, blob) {
   const writable = await handle.createWritable();
   await writable.write(blob);

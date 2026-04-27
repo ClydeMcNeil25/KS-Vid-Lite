@@ -77,7 +77,14 @@ export function burnTextOverlays(
         console.log("Overlay render complete.");
         resolve();
       })
-      .on("error", reject)
+      .on("error", (error, _stdout, stderr) => {
+        const details = stderr?.trim();
+        reject(
+          new Error(
+            details ? `${error.message}\n${details}` : error.message
+          )
+        );
+      })
       .run();
   });
 }
