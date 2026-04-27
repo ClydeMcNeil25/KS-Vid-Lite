@@ -5,8 +5,47 @@ import ffmpegPath from "ffmpeg-static";
 import ffprobeStatic from "ffprobe-static";
 import { AspectRatio, OutputFps } from "../types/project.types";
 
-ffmpeg.setFfmpegPath(ffmpegPath as string);
-ffmpeg.setFfprobePath(ffprobeStatic.path);
+function resolvePackedBinaryPath(binaryPath: string | null, fallbackParts: string[]) {
+  if (!binaryPath) {
+    return "";
+  }
+
+  const unpackedPath = binaryPath.replace(/app\.asar/g, "app.asar.unpacked");
+
+  if (fs.existsSync(unpackedPath)) {
+    return unpackedPath;
+  }
+
+  if (process.resourcesPath) {
+    const manualPath = path.join(
+      process.resourcesPath,
+      "app.asar.unpacked",
+      ...fallbackParts
+    );
+
+    if (fs.existsSync(manualPath)) {
+      return manualPath;
+    }
+  }
+
+  return binaryPath;
+}
+
+const resolvedFfmpegPath = resolvePackedBinaryPath(
+  ffmpegPath,
+  ["node_modules", "ffmpeg-static", "ffmpeg.exe"]
+);
+
+const resolvedFfprobePath = resolvePackedBinaryPath(
+  ffprobeStatic.path,
+  ["node_modules", "ffprobe-static", "bin", "win32", "x64", "ffprobe.exe"]
+);
+
+console.log("FFMPEG RESOLVED PATH:", resolvedFfmpegPath);
+console.log("FFPROBE RESOLVED PATH:", resolvedFfprobePath);
+
+ffmpeg.setFfmpegPath(resolvedFfmpegPath);
+ffmpeg.setFfprobePath(resolvedFfprobePath);
 
 export interface ClipInput {
   path: string;
@@ -55,7 +94,7 @@ function trimClip(
         [
           `scale=${width}:${height}:force_original_aspect_ratio=decrease`,
           `pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:color=black`,
-          `setsar=1`,
+          "setsar=1",
           `setdar=${width}/${height}`,
           `fps=${format.fps}`
         ].join(",")
@@ -69,9 +108,7 @@ function trimClip(
       .on("error", (error, _stdout, stderr) => {
         const details = stderr?.trim();
         reject(
-          new Error(
-            details ? `${error.message}\n${details}` : error.message
-          )
+          new Error(details ? `${error.message}\n${details}` : error.message)
         );
       })
       .run();
@@ -116,9 +153,7 @@ export async function renderVideo(
       .on("error", (error, _stdout, stderr) => {
         const details = stderr?.trim();
         reject(
-          new Error(
-            details ? `${error.message}\n${details}` : error.message
-          )
+          new Error(details ? `${error.message}\n${details}` : error.message)
         );
       })
       .mergeToFile(outputPath, tempDir);
