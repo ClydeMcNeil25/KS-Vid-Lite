@@ -17,7 +17,8 @@ function resolveFfprobePath() {
     return unpackedPath;
   }
 
-  const resourcesPath = process.resourcesPath;
+  const resourcesPath =
+  (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
 
   if (resourcesPath) {
     const manualPath = path.join(

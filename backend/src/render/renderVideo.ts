@@ -16,17 +16,20 @@ function resolvePackedBinaryPath(binaryPath: string | null, fallbackParts: strin
     return unpackedPath;
   }
 
-  if (process.resourcesPath) {
+  const resourcesPath =
+  (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
+
+  if (resourcesPath) {
     const manualPath = path.join(
-      process.resourcesPath,
+      resourcesPath,
       "app.asar.unpacked",
       ...fallbackParts
-    );
+  );
 
-    if (fs.existsSync(manualPath)) {
-      return manualPath;
-    }
+  if (fs.existsSync(manualPath)) {
+    return manualPath;
   }
+}
 
   return binaryPath;
 }
