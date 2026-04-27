@@ -7,6 +7,12 @@
   "dev": "nodemon --exec ts-node src/api/testDuration.ts",
   "metadata": "ts-node --files src/api/testMetadata.ts",
   "import": "ts-node --files src/api/testImportMedia.ts",
+  "validate": "ts-node --files src/api/testIngestAndValidate.ts",
+  "timeline": "ts-node --files src/api/testTimeline.ts",
+  "render": "ts-node --files src/api/testRender.ts",
+  "pipeline": "ts-node --files src/api/testFullPipeline.ts",
+  "autoedit": "ts-node --files src/api/testAutoEdit.ts",
+  "overlay": "ts-node --files src/api/testOverlay.ts",
   "test": "echo \"Error: no test specified\" && exit 1"
 },
   "keywords": [],
