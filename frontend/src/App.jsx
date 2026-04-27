@@ -18,7 +18,8 @@ function nowStamp() {
 export default function App() {
   // ----- Sources -----
   const [files, setFiles] = useState([]);
-  const [outputPath, setOutputPath] = useState(DEFAULT_OUTPUT);
+  const [pickedFiles, setPickedFiles] = useState([]);
+  const [outputPath, setOutputPath] = useState('');
   const [captions, setCaptions] = useState([]);
   const captionIdRef = useRef(0);
 
@@ -64,6 +65,13 @@ export default function App() {
   };
   const removeFile = (idx) =>
     setFiles((prev) => prev.filter((_, i) => i !== idx));
+  const addPickedFiles = (newFiles) => {
+    if (!newFiles.length) return;
+    setPickedFiles((prev) => [...prev, ...newFiles]);
+    newFiles.forEach((file) => log('Picked: ' + file.name, 'info'));
+  };
+  const removePickedFile = (idx) =>
+    setPickedFiles((prev) => prev.filter((_, i) => i !== idx));
 
   const addCaption = () => {
     const id = ++captionIdRef.current;
@@ -86,18 +94,20 @@ export default function App() {
   // ----- Derived payload (memoized so JSON.stringify only re-runs on change) -----
   const payload = useMemo(
     () => ({
-      files: [...files],
+      files: [...files, ...pickedFiles.map((file) => `[upload] ${file.name}`)],
       targetDuration,
       mode,
       style,
       outputPath: outputPath.trim(),
       enableOverlays,
+      uploadCount: pickedFiles.length,
       captions: enableCaptions
         ? captions.map(({ text, start, end }) => ({ text, start, end }))
         : [],
     }),
     [
       files,
+      pickedFiles,
       targetDuration,
       mode,
       style,
@@ -108,16 +118,51 @@ export default function App() {
     ],
   );
 
+  const buildRenderBody = () => {
+    const normalizedCaptions = enableCaptions
+      ? captions.map(({ text, start, end }) => ({ text, start, end }))
+      : [];
+
+    if (pickedFiles.length) {
+      const formData = new FormData();
+
+      pickedFiles.forEach((file) => {
+        formData.append('sourceFiles', file);
+      });
+
+      files.forEach((filePath) => {
+        formData.append('files', filePath);
+      });
+
+      formData.append('targetDuration', String(targetDuration));
+      formData.append('mode', mode);
+      formData.append('style', style);
+      formData.append('enableOverlays', String(enableOverlays));
+      formData.append('captions', JSON.stringify(normalizedCaptions));
+
+      if (outputPath.trim()) {
+        formData.append('outputPath', outputPath.trim());
+      }
+
+      return formData;
+    }
+
+    return {
+      files: [...files],
+      targetDuration,
+      mode,
+      style,
+      outputPath: outputPath.trim() || DEFAULT_OUTPUT,
+      enableOverlays,
+      captions: normalizedCaptions,
+    };
+  };
+
   // ----- Render lifecycle -----
   const startRender = async () => {
-    if (!payload.files.length) {
+    if (!files.length && !pickedFiles.length) {
       log('No input files', 'err');
       setStatus('error', 'ERROR', 'Add at least one input file.');
-      return;
-    }
-    if (!payload.outputPath) {
-      log('No output path', 'err');
-      setStatus('error', 'ERROR', 'Set an output path.');
       return;
     }
 
@@ -137,7 +182,7 @@ export default function App() {
     }, 700);
 
     try {
-      const data = await renderVideo(payload);
+      const data = await renderVideo(buildRenderBody());
       clearInterval(tickRef.current);
       tickRef.current = null;
       setProgress(100);
@@ -198,10 +243,13 @@ export default function App() {
       <div className="body">
         <SourcesPanel
           files={files}
+          pickedFiles={pickedFiles}
           outputPath={outputPath}
           captions={captions}
           onAddFile={addFile}
           onRemoveFile={removeFile}
+          onAddPickedFiles={addPickedFiles}
+          onRemovePickedFile={removePickedFile}
           onSetOutputPath={setOutputPath}
           onAddCaption={addCaption}
           onUpdateCaption={updateCaption}

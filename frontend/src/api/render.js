@@ -20,10 +20,11 @@ export const HEALTH_ENDPOINT = `${API_BASE}/health`;
  * @returns {Promise<object>} parsed JSON response from the backend
  */
 export async function renderVideo(payload) {
+  const isFormData = payload instanceof FormData;
   const res = await fetch(RENDER_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    headers: isFormData ? undefined : { 'Content-Type': 'application/json' },
+    body: isFormData ? payload : JSON.stringify(payload),
   });
 
   return res.json();

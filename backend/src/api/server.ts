@@ -1,12 +1,104 @@
 import express from "express";
 import cors from "cors";
+import fs from "fs";
+import path from "path";
+import multer from "multer";
 import { createAutoEdit } from "../pipeline/createAutoEdit";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const uploadsDir = path.resolve(process.cwd(), "uploads");
+const rendersDir = path.resolve(process.cwd(), "test-assets");
+
+fs.mkdirSync(uploadsDir, { recursive: true });
+fs.mkdirSync(rendersDir, { recursive: true });
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsDir),
+    filename: (_req, file, cb) => {
+      const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
+      cb(null, `${Date.now()}-${safeName}`);
+    }
+  })
+});
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
+
+function asStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    return [value];
+  }
+
+  return [];
+}
+
+function parseTargetDuration(value: unknown): number | undefined {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+}
+
+function parseBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    return value.toLowerCase() === "true";
+  }
+
+  return fallback;
+}
+
+function parseCaptions(value: unknown) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+function buildDefaultOutputPath(inputFiles: string[]): string {
+  const firstInput = inputFiles[0] ?? "render";
+  const baseName = path.parse(firstInput).name || "render";
+  const safeName = baseName.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return path.join(rendersDir, `${safeName}-${stamp}.mp4`);
+}
+
+async function cleanupUploadedFiles(files: Express.Multer.File[]) {
+  await Promise.all(
+    files.map(async (file) => {
+      try {
+        await fs.promises.unlink(file.path);
+      } catch {
+        // Best-effort cleanup only.
+      }
+    })
+  );
+}
 
 app.get("/health", (_req, res) => {
   res.json({
@@ -15,19 +107,37 @@ app.get("/health", (_req, res) => {
   });
 });
 
-app.post("/auto-edit", async (req, res) => {
-  try {
-    const {
-      files,
-      targetDuration,
-      mode,
-      style,
-      outputPath,
-      enableOverlays,
-      captions
-    } = req.body;
+app.post("/auto-edit", (req, res, next) => {
+  const contentType = req.headers["content-type"] ?? "";
 
-    if (!Array.isArray(files) || files.length === 0) {
+  if (contentType.includes("multipart/form-data")) {
+    upload.array("sourceFiles")(req, res, next);
+    return;
+  }
+
+  next();
+});
+
+app.post("/auto-edit", async (req, res) => {
+  const uploadedFiles = ((req.files as Express.Multer.File[] | undefined) ??
+    []) as Express.Multer.File[];
+
+  try {
+    const manualFiles = asStringArray(req.body.files);
+    const uploadedPaths = uploadedFiles.map((file) => file.path);
+    const files = [...manualFiles, ...uploadedPaths];
+    const targetDuration = parseTargetDuration(req.body.targetDuration);
+    const mode =
+      typeof req.body.mode === "string" ? req.body.mode : undefined;
+    const style =
+      typeof req.body.style === "string" ? req.body.style : undefined;
+    const requestedOutputPath =
+      typeof req.body.outputPath === "string" ? req.body.outputPath.trim() : "";
+    const outputPath = requestedOutputPath || buildDefaultOutputPath(files);
+    const enableOverlays = parseBoolean(req.body.enableOverlays, true);
+    const captions = parseCaptions(req.body.captions);
+
+    if (files.length === 0) {
       return res.status(400).json({
         success: false,
         stage: "input",
@@ -59,14 +169,6 @@ app.post("/auto-edit", async (req, res) => {
       });
     }
 
-    if (!outputPath) {
-      return res.status(400).json({
-        success: false,
-        stage: "input",
-        message: "outputPath is required."
-      });
-    }
-
     const result = await createAutoEdit({
       files,
       targetDuration,
@@ -95,6 +197,8 @@ app.post("/auto-edit", async (req, res) => {
       stage: "server",
       message: error instanceof Error ? error.message : "Unknown server error"
     });
+  } finally {
+    await cleanupUploadedFiles(uploadedFiles);
   }
 });
 

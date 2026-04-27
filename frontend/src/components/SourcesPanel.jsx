@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import styles from '../styles/SourcesPanel.module.css';
 
 function FileIcon() {
@@ -12,21 +12,32 @@ function FileIcon() {
 
 export default function SourcesPanel({
   files,
+  pickedFiles,
   outputPath,
   captions,
   onAddFile,
   onRemoveFile,
+  onAddPickedFiles,
+  onRemovePickedFile,
   onSetOutputPath,
   onAddCaption,
   onUpdateCaption,
   onRemoveCaption,
 }) {
   const [draftPath, setDraftPath] = useState('');
+  const fileInputRef = useRef(null);
 
   const submitDraft = () => {
     if (!draftPath.trim()) return;
     onAddFile(draftPath);
     setDraftPath('');
+  };
+
+  const handleFileSelection = (event) => {
+    const selected = Array.from(event.target.files ?? []);
+    if (!selected.length) return;
+    onAddPickedFiles(selected);
+    event.target.value = '';
   };
 
   return (
@@ -47,9 +58,55 @@ export default function SourcesPanel({
       </div>
 
       <div className="pb">
-        {/* Input file path */}
+        {/* Input files */}
         <div className="field">
-          <label className="fl">Input file path</label>
+          <label className="fl">Source videos</label>
+          <div className={styles.buttonRow}>
+            <button
+              className={`btn-add ${styles.primaryBrowseBtn}`}
+              onClick={() => fileInputRef.current?.click()}
+              type="button"
+            >
+              + Browse video files
+            </button>
+            <input
+              ref={fileInputRef}
+              className={styles.hiddenInput}
+              type="file"
+              accept="video/*"
+              multiple
+              onChange={handleFileSelection}
+            />
+          </div>
+          <p className={styles.helperText}>
+            Pick local video files directly, or paste a full file path as a
+            fallback.
+          </p>
+        </div>
+
+        <div className={styles.fileList}>
+          {pickedFiles.map((file, i) => (
+            <div key={`${file.name}-${file.lastModified}-${i}`} className={styles.fpill}>
+              <div className={styles.fpillIco}>
+                <FileIcon />
+              </div>
+              <span className={styles.fpillPath} title={file.name}>
+                {file.name}
+              </span>
+              <span className={styles.fileTag}>upload</span>
+              <button
+                className={styles.fpillRm}
+                onClick={() => onRemovePickedFile(i)}
+                aria-label="Remove file"
+              >
+                &#10005;
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="field">
+          <label className="fl">Manual file path</label>
           <input
             className="fi"
             placeholder="D:/path/to/video.mp4"
@@ -89,13 +146,16 @@ export default function SourcesPanel({
 
         {/* Output path */}
         <div className="field">
-          <label className="fl">Output path</label>
+          <label className="fl">Output path (optional)</label>
           <input
             className="fi"
-            placeholder="D:/path/output.mp4"
+            placeholder="Leave blank to auto-save into backend/test-assets"
             value={outputPath}
             onChange={(e) => onSetOutputPath(e.target.value)}
           />
+          <p className={styles.helperText}>
+            If blank, the backend will auto-generate a render path for you.
+          </p>
         </div>
 
         <div className="divider" />
