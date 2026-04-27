@@ -1,10 +1,68 @@
 import ffmpeg from "fluent-ffmpeg";
+import fs from "fs";
+import path from "path";
 import ffmpegPath from "ffmpeg-static";
 import ffprobeStatic from "ffprobe-static";
 import { TextOverlay } from "../types/overlay.types";
 
-ffmpeg.setFfmpegPath(ffmpegPath as string);
-ffmpeg.setFfprobePath(ffprobeStatic.path);
+function getResourcesPath() {
+  return (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
+}
+
+function resolvePackedBinaryPath(
+  binaryPath: string | null,
+  binaryName: "ffmpeg.exe" | "ffprobe.exe",
+  fallbackParts: string[]
+) {
+  const resourcesPath = getResourcesPath();
+
+  if (resourcesPath) {
+    const directPath = path.join(resourcesPath, "bin", binaryName);
+
+    if (fs.existsSync(directPath)) {
+      return directPath;
+    }
+  }
+
+  if (!binaryPath) {
+    return "";
+  }
+
+  const unpackedPath = binaryPath.replace(/app\.asar/g, "app.asar.unpacked");
+
+  if (fs.existsSync(unpackedPath)) {
+    return unpackedPath;
+  }
+
+  if (resourcesPath) {
+    const manualPath = path.join(
+      resourcesPath,
+      "app.asar.unpacked",
+      ...fallbackParts
+    );
+
+    if (fs.existsSync(manualPath)) {
+      return manualPath;
+    }
+  }
+
+  return binaryPath;
+}
+
+const resolvedFfmpegPath = resolvePackedBinaryPath(
+  ffmpegPath,
+  "ffmpeg.exe",
+  ["node_modules", "ffmpeg-static", "ffmpeg.exe"]
+);
+
+const resolvedFfprobePath = resolvePackedBinaryPath(
+  ffprobeStatic.path,
+  "ffprobe.exe",
+  ["node_modules", "ffprobe-static", "bin", "win32", "x64", "ffprobe.exe"]
+);
+
+ffmpeg.setFfmpegPath(resolvedFfmpegPath);
+ffmpeg.setFfprobePath(resolvedFfprobePath);
 
 function escapeText(text: string): string {
   return text
