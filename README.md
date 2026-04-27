@@ -41,7 +41,130 @@ This project is currently in **alpha development**, with active testing and iter
 
 KS-Vid-Lite is the foundation for a broader ecosystem of creator tools under Krucial Studios, aimed at simplifying content production through intelligent automation.
 
-# KS-Vid-Lite — Devlog
+# 🚀 KS-Vid-Lite Devlog
+
+**Version:** v1.3b
+**Date:** 2026-04-27
+
+---
+
+## 🧠 Summary
+
+Version **v1.3b** marks a major breakthrough in KS-Vid-Lite’s development, transitioning the project from a partially functional desktop prototype into a **fully operational packaged application**. This phase focused heavily on resolving critical runtime issues that only appeared after Electron packaging, particularly around backend execution and FFmpeg/FFprobe integration.
+
+---
+
+## 🔧 Key Fixes & Improvements
+
+### 🖥️ Electron Runtime Stability
+
+* Removed reliance on `npm`, `cmd`, and dev-only processes in production
+* Backend now initializes directly via compiled output (`backend/dist`)
+* Eliminated dependency on Vite dev server for packaged builds
+
+---
+
+### 🔌 Backend Integration (Production Ready)
+
+* Corrected backend entry point to properly start Express server in packaged app
+* Ensured API endpoints (`/auto-edit`, `/health`, `/media`, `/download`) function correctly outside dev environment
+* Resolved payload handling for media uploads using FormData
+
+---
+
+### 🎬 FFmpeg / FFprobe Execution (Critical Fix)
+
+* Fixed binary execution failure caused by Electron `app.asar` packaging
+* Implemented `asarUnpack` to expose FFmpeg/FFprobe binaries
+* Added dynamic path resolution:
+
+  * Converts `app.asar` → `app.asar.unpacked`
+  * Includes fallback resolution using `process.resourcesPath`
+* Verified metadata extraction pipeline is now fully functional
+
+---
+
+### 🧠 Media Processing Pipeline
+
+* Fixed silent failure in `importMedia()` that previously returned empty results
+* Added detailed error reporting for metadata extraction failures
+* Restored proper flow:
+
+  ```
+  Upload → Metadata → Timeline → Render → Output
+  ```
+
+---
+
+### 🧪 Debug & Testing Workflow
+
+* Introduced efficient testing strategy:
+
+  * `electron .` for production-like runtime testing (no packaging required)
+  * Reduced reliance on repeated installer builds
+* Added runtime logging for:
+
+  * FFmpeg/FFprobe paths
+  * Metadata extraction results
+  * Timeline generation inputs
+
+---
+
+### 🎨 Frontend Stability
+
+* Fixed black screen issue by setting Vite `base: "./"` for packaged builds
+* Removed reliance on `window.location.origin` for API routing
+* Ensured frontend communicates directly with backend (`localhost:3001`) in production
+
+---
+
+### 🧼 Build & Packaging Improvements
+
+* Cleaned build process:
+
+  * Added proper `rimraf --glob` usage for Windows compatibility
+* Ensured all required runtime dependencies are included in packaged app
+* Verified successful `.exe` installer generation with working runtime behavior
+
+---
+
+## ⚠️ Known Limitations (v1.3b)
+
+* Timeline logic can still reject valid footage under strict conditions
+* No GPU acceleration yet
+* No real-time render progress UI
+* Minimal user-facing error messaging (dev-focused)
+
+---
+
+## 🎯 Outcome
+
+KS-Vid-Lite is now:
+
+```text
+✅ Fully installable desktop application
+✅ Backend + frontend fully integrated in production
+✅ Media ingestion and rendering pipeline functional
+```
+
+This version represents the **first truly usable end-to-end build** of the platform.
+
+---
+
+## 🔮 Next Focus (v1.4)
+
+* Real-time render progress feedback
+* Improved timeline intelligence (adaptive duration handling)
+* UX enhancements (drag & drop, presets, preview)
+* Error handling refinement for non-technical users
+
+---
+
+## 💬 Closing Note
+
+v1.3b is the turning point where KS-Vid-Lite evolves from a development experiment into a **foundation for a real product**. The core system is now stable, functional, and ready for refinement and expansion.
+
+---
 
 # 🚀 KS-Vid-Lite Devlog — v1.0B (Beta)
 
