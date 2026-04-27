@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import styles from '../styles/SourcesPanel.module.css';
 
 function FileIcon() {
@@ -11,14 +11,11 @@ function FileIcon() {
 }
 
 export default function SourcesPanel({
-  files,
   pickedFiles,
   outputPath,
   outputHandleName,
   canPickOutput,
   captions,
-  onAddFile,
-  onRemoveFile,
   onAddPickedFiles,
   onRemovePickedFile,
   onSetOutputPath,
@@ -28,14 +25,7 @@ export default function SourcesPanel({
   onUpdateCaption,
   onRemoveCaption,
 }) {
-  const [draftPath, setDraftPath] = useState('');
   const fileInputRef = useRef(null);
-
-  const submitDraft = () => {
-    if (!draftPath.trim()) return;
-    onAddFile(draftPath);
-    setDraftPath('');
-  };
 
   const handleFileSelection = (event) => {
     const selected = Array.from(event.target.files ?? []);
@@ -83,8 +73,7 @@ export default function SourcesPanel({
             />
           </div>
           <p className={styles.helperText}>
-            Pick local video files directly, or paste a full file path as a
-            fallback.
+            Pick one or more local video files directly from your computer.
           </p>
         </div>
 
@@ -101,43 +90,6 @@ export default function SourcesPanel({
               <button
                 className={styles.fpillRm}
                 onClick={() => onRemovePickedFile(i)}
-                aria-label="Remove file"
-              >
-                &#10005;
-              </button>
-            </div>
-          ))}
-        </div>
-
-        <div className="field">
-          <label className="fl">Manual file path</label>
-          <input
-            className="fi"
-            placeholder="D:/path/to/video.mp4"
-            value={draftPath}
-            onChange={(e) => setDraftPath(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') submitDraft();
-            }}
-          />
-        </div>
-
-        <button className="btn-add" onClick={submitDraft}>
-          + Add file path
-        </button>
-
-        <div className={styles.fileList}>
-          {files.map((f, i) => (
-            <div key={`${f}-${i}`} className={styles.fpill}>
-              <div className={styles.fpillIco}>
-                <FileIcon />
-              </div>
-              <span className={styles.fpillPath} title={f}>
-                {f}
-              </span>
-              <button
-                className={styles.fpillRm}
-                onClick={() => onRemoveFile(i)}
                 aria-label="Remove file"
               >
                 &#10005;

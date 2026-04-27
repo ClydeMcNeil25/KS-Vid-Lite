@@ -32,7 +32,6 @@ function nowStamp() {
 
 export default function App() {
   // ----- Sources -----
-  const [files, setFiles] = useState([]);
   const [pickedFiles, setPickedFiles] = useState([]);
   const [outputPath, setOutputPath] = useState('');
   const [outputHandle, setOutputHandle] = useState(null);
@@ -73,15 +72,6 @@ export default function App() {
   };
 
   // ----- Sources actions -----
-  const addFile = (path) => {
-    const v = path.trim();
-    if (!v) return;
-    setFiles((prev) => [...prev, v]);
-    const leaf = v.split(/[/\\]/).pop();
-    log('Added: ' + leaf, 'info');
-  };
-  const removeFile = (idx) =>
-    setFiles((prev) => prev.filter((_, i) => i !== idx));
   const addPickedFiles = (newFiles) => {
     if (!newFiles.length) return;
     setPickedFiles((prev) => [...prev, ...newFiles]);
@@ -102,7 +92,7 @@ export default function App() {
     }
 
     try {
-      const suggestedSource = pickedFiles[0]?.name || files[0] || 'ks-vid-lite-render.mp4';
+      const suggestedSource = pickedFiles[0]?.name || 'ks-vid-lite-render.mp4';
       const handle = await pickOutputHandle(buildSuggestedOutputName(suggestedSource));
       setOutputHandle(handle);
       setOutputHandleName(handle.name);
@@ -144,7 +134,7 @@ export default function App() {
   // ----- Derived payload (memoized so JSON.stringify only re-runs on change) -----
   const payload = useMemo(
     () => ({
-      files: [...files, ...pickedFiles.map((file) => `[upload] ${file.name}`)],
+      files: pickedFiles.map((file) => `[upload] ${file.name}`),
       targetDuration,
       mode,
       style,
@@ -156,7 +146,6 @@ export default function App() {
         : [],
     }),
     [
-      files,
       pickedFiles,
       targetDuration,
       mode,
@@ -181,10 +170,6 @@ export default function App() {
         formData.append('sourceFiles', file);
       });
 
-      files.forEach((filePath) => {
-        formData.append('files', filePath);
-      });
-
       formData.append('targetDuration', String(targetDuration));
       formData.append('mode', mode);
       formData.append('style', style);
@@ -199,7 +184,7 @@ export default function App() {
     }
 
     return {
-      files: [...files],
+      files: [],
       targetDuration,
       mode,
       style,
@@ -224,7 +209,7 @@ export default function App() {
 
   // ----- Render lifecycle -----
   const startRender = async () => {
-    if (!files.length && !pickedFiles.length) {
+    if (!pickedFiles.length) {
       log('No input files', 'err');
       setStatus('error', 'ERROR', 'Add at least one input file.');
       return;
@@ -334,14 +319,11 @@ export default function App() {
       <Header apiOnline={apiOnline} />
       <div className="body">
         <SourcesPanel
-          files={files}
           pickedFiles={pickedFiles}
           outputPath={outputPath}
           outputHandleName={outputHandleName}
           canPickOutput={supportsFileSystemAccess()}
           captions={captions}
-          onAddFile={addFile}
-          onRemoveFile={removeFile}
           onAddPickedFiles={addPickedFiles}
           onRemovePickedFile={removePickedFile}
           onSetOutputPath={setOutputPath}
