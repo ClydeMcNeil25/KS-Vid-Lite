@@ -107,6 +107,38 @@ app.get("/health", (_req, res) => {
   });
 });
 
+app.get("/download", async (req, res) => {
+  const requestedPath =
+    typeof req.query.path === "string" ? req.query.path.trim() : "";
+
+  if (!requestedPath) {
+    return res.status(400).json({
+      success: false,
+      message: "path query parameter is required."
+    });
+  }
+
+  const resolvedPath = path.resolve(requestedPath);
+
+  try {
+    const stat = await fs.promises.stat(resolvedPath);
+
+    if (!stat.isFile()) {
+      return res.status(404).json({
+        success: false,
+        message: "Requested file does not exist."
+      });
+    }
+
+    return res.download(resolvedPath);
+  } catch {
+    return res.status(404).json({
+      success: false,
+      message: "Requested file does not exist."
+    });
+  }
+});
+
 app.post("/auto-edit", (req, res, next) => {
   const contentType = req.headers["content-type"] ?? "";
 

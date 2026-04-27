@@ -13,6 +13,7 @@ const API_BASE =
 
 export const RENDER_ENDPOINT = `${API_BASE}/auto-edit`;
 export const HEALTH_ENDPOINT = `${API_BASE}/health`;
+export const DOWNLOAD_ENDPOINT = `${API_BASE}/download`;
 
 /**
  * POST a render payload to the backend.
@@ -45,4 +46,16 @@ export async function pingBackend(timeoutMs = 2000) {
   } finally {
     clearTimeout(tid);
   }
+}
+
+export async function downloadRenderedVideo(outputPath) {
+  const url = new URL(DOWNLOAD_ENDPOINT, window.location.origin);
+  url.searchParams.set('path', outputPath);
+
+  const res = await fetch(url.toString());
+  if (!res.ok) {
+    throw new Error('Unable to download rendered video.');
+  }
+
+  return res.blob();
 }

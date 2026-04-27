@@ -14,12 +14,16 @@ export default function SourcesPanel({
   files,
   pickedFiles,
   outputPath,
+  outputHandleName,
+  canPickOutput,
   captions,
   onAddFile,
   onRemoveFile,
   onAddPickedFiles,
   onRemovePickedFile,
   onSetOutputPath,
+  onChooseOutputFile,
+  onClearOutputTarget,
   onAddCaption,
   onUpdateCaption,
   onRemoveCaption,
@@ -146,15 +150,43 @@ export default function SourcesPanel({
 
         {/* Output path */}
         <div className="field">
-          <label className="fl">Output path (optional)</label>
+          <label className="fl">Output destination</label>
+          {canPickOutput && (
+            <div className={styles.buttonRow}>
+              <button
+                className={`btn-add ${styles.primaryBrowseBtn}`}
+                onClick={onChooseOutputFile}
+                type="button"
+              >
+                + Choose output file
+              </button>
+              {outputHandleName && (
+                <button
+                  className={`btn-add ${styles.secondaryActionBtn}`}
+                  onClick={onClearOutputTarget}
+                  type="button"
+                >
+                  Clear saved target
+                </button>
+              )}
+            </div>
+          )}
+          {outputHandleName && (
+            <div className={styles.outputTargetCard}>
+              <span className={styles.outputTargetLabel}>Saved output target</span>
+              <span className={styles.outputTargetName}>{outputHandleName}</span>
+            </div>
+          )}
           <input
             className="fi"
-            placeholder="Leave blank to auto-save into backend/test-assets"
+            placeholder="Optional manual backend path override"
             value={outputPath}
             onChange={(e) => onSetOutputPath(e.target.value)}
           />
           <p className={styles.helperText}>
-            If blank, the backend will auto-generate a render path for you.
+            If you choose an output file above, the app will remember it and
+            save future renders there. If this field is blank and no output
+            file is selected, the backend auto-saves into `backend/test-assets`.
           </p>
         </div>
 

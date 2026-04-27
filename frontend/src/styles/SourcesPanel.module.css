@@ -14,6 +14,10 @@
   background: rgba(124, 108, 250, 0.2);
 }
 
+.secondaryActionBtn {
+  border-style: solid;
+}
+
 .hiddenInput {
   display: none;
 }
@@ -23,6 +27,31 @@
   font-size: 10px;
   line-height: 1.5;
   font-family: var(--font-m);
+}
+
+.outputTargetCard {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.outputTargetLabel {
+  color: var(--text2);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-m);
+}
+
+.outputTargetName {
+  color: var(--text0);
+  font-size: 11px;
+  font-family: var(--font-m);
+  word-break: break-word;
 }
 
 .fileList {

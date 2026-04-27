@@ -3,10 +3,25 @@ import Header from './components/Header.jsx';
 import SourcesPanel from './components/SourcesPanel.jsx';
 import CenterPanel from './components/CenterPanel.jsx';
 import StatusPanel from './components/StatusPanel.jsx';
-import { renderVideo, pingBackend } from './api/render.js';
+import {
+  downloadRenderedVideo,
+  renderVideo,
+  pingBackend,
+} from './api/render.js';
+import {
+  clearOutputHandle,
+  ensureOutputHandlePermission,
+  loadOutputHandle,
+  pickOutputHandle,
+  saveOutputHandle,
+  supportsFileSystemAccess,
+  writeBlobToHandle,
+  buildSuggestedOutputName,
+} from './utils/outputHandleStore.js';
 
 const DEFAULT_OUTPUT =
   'D:/Dropbox/05 Development/KS-Vid-Lite/backend/test-assets/api-test-output.mp4';
+const OUTPUT_PATH_STORAGE_KEY = 'ks-vid-lite-output-path';
 
 function nowStamp() {
   const n = new Date();
@@ -20,6 +35,8 @@ export default function App() {
   const [files, setFiles] = useState([]);
   const [pickedFiles, setPickedFiles] = useState([]);
   const [outputPath, setOutputPath] = useState('');
+  const [outputHandle, setOutputHandle] = useState(null);
+  const [outputHandleName, setOutputHandleName] = useState('');
   const [captions, setCaptions] = useState([]);
   const captionIdRef = useRef(0);
 
@@ -73,6 +90,39 @@ export default function App() {
   const removePickedFile = (idx) =>
     setPickedFiles((prev) => prev.filter((_, i) => i !== idx));
 
+  const chooseOutputFile = async () => {
+    if (!supportsFileSystemAccess()) {
+      log('Browser save picker is not supported here.', 'err');
+      setStatus(
+        'error',
+        'OUTPUT PICKER',
+        'This browser does not support the output file picker.',
+      );
+      return;
+    }
+
+    try {
+      const suggestedSource = pickedFiles[0]?.name || files[0] || 'ks-vid-lite-render.mp4';
+      const handle = await pickOutputHandle(buildSuggestedOutputName(suggestedSource));
+      setOutputHandle(handle);
+      setOutputHandleName(handle.name);
+      setOutputPath('');
+      await saveOutputHandle(handle);
+      log(`Output target selected: ${handle.name}`, 'ok');
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        log(`Output picker error: ${error.message}`, 'err');
+      }
+    }
+  };
+
+  const clearSavedOutputTarget = async () => {
+    setOutputHandle(null);
+    setOutputHandleName('');
+    await clearOutputHandle();
+    log('Cleared saved output target.', 'info');
+  };
+
   const addCaption = () => {
     const id = ++captionIdRef.current;
     setCaptions((prev) => [...prev, { id, text: '', start: 0, end: 5 }]);
@@ -98,7 +148,7 @@ export default function App() {
       targetDuration,
       mode,
       style,
-      outputPath: outputPath.trim(),
+      outputPath: outputPath.trim() || (outputHandleName ? `[save picker] ${outputHandleName}` : ''),
       enableOverlays,
       uploadCount: pickedFiles.length,
       captions: enableCaptions
@@ -112,6 +162,7 @@ export default function App() {
       mode,
       style,
       outputPath,
+      outputHandleName,
       enableOverlays,
       enableCaptions,
       captions,
@@ -158,6 +209,19 @@ export default function App() {
     };
   };
 
+  const persistRenderedOutput = async (resultOutputPath) => {
+    if (!outputHandle) return;
+
+    const permitted = await ensureOutputHandlePermission(outputHandle);
+    if (!permitted) {
+      throw new Error('Permission to write to the selected output file was denied.');
+    }
+
+    const renderedBlob = await downloadRenderedVideo(resultOutputPath);
+    await writeBlobToHandle(outputHandle, renderedBlob);
+    log(`Saved render to ${outputHandle.name}`, 'ok');
+  };
+
   // ----- Render lifecycle -----
   const startRender = async () => {
     if (!files.length && !pickedFiles.length) {
@@ -188,6 +252,9 @@ export default function App() {
       setProgress(100);
 
       if (data && data.success) {
+        if (data.result?.outputPath && outputHandle && !outputPath.trim()) {
+          await persistRenderedOutput(data.result.outputPath);
+        }
         setStatus('success', 'COMPLETE', 'Render finished.');
         log('Done -> ' + (data.result?.outputPath || ''), 'ok');
         setResult(data);
@@ -220,6 +287,11 @@ export default function App() {
 
   // ----- Mount: ping backend once -----
   useEffect(() => {
+    const storedOutputPath = window.localStorage.getItem(OUTPUT_PATH_STORAGE_KEY);
+    if (storedOutputPath) {
+      setOutputPath(storedOutputPath);
+    }
+
     let cancelled = false;
     (async () => {
       const ok = await pingBackend(2000);
@@ -228,6 +300,22 @@ export default function App() {
       if (ok) log('API reachable', 'ok');
       else log('Backend offline - start server first', 'err');
     })();
+
+    if (supportsFileSystemAccess()) {
+      (async () => {
+        try {
+          const handle = await loadOutputHandle();
+          if (!cancelled && handle) {
+            setOutputHandle(handle);
+            setOutputHandleName(handle.name);
+            log(`Restored output target: ${handle.name}`, 'info');
+          }
+        } catch {
+          // Best-effort restore only.
+        }
+      })();
+    }
+
     return () => {
       cancelled = true;
       if (tickRef.current) clearInterval(tickRef.current);
@@ -237,6 +325,10 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    window.localStorage.setItem(OUTPUT_PATH_STORAGE_KEY, outputPath);
+  }, [outputPath]);
+
   return (
     <div className="shell">
       <Header apiOnline={apiOnline} />
@@ -245,12 +337,16 @@ export default function App() {
           files={files}
           pickedFiles={pickedFiles}
           outputPath={outputPath}
+          outputHandleName={outputHandleName}
+          canPickOutput={supportsFileSystemAccess()}
           captions={captions}
           onAddFile={addFile}
           onRemoveFile={removeFile}
           onAddPickedFiles={addPickedFiles}
           onRemovePickedFile={removePickedFile}
           onSetOutputPath={setOutputPath}
+          onChooseOutputFile={chooseOutputFile}
+          onClearOutputTarget={clearSavedOutputTarget}
           onAddCaption={addCaption}
           onUpdateCaption={updateCaption}
           onRemoveCaption={removeCaption}
