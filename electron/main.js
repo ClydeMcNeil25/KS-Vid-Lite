@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -159,6 +159,9 @@ function createMainWindow() {
       contextIsolation: true
     }
   });
+
+  Menu.setApplicationMenu(null);
+  mainWindow.setMenuBarVisibility(false);
 
   mainWindow.maximize();
 

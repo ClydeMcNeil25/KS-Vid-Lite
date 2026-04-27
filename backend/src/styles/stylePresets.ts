@@ -5,11 +5,11 @@ export const stylePresets: Record<EditStyleId, EditStylePreset> = {
     id: "viral",
     name: "Viral",
     pacing: "fast",
-    minClipLength: 0.5,
+    minClipLength: 0.75,
     maxClipLength: 2.5,
     padding: {
-      pre: 0.1,
-      post: 0.1
+      pre: 0.3,
+      post: 0.5
     }
   },
 
@@ -17,11 +17,11 @@ export const stylePresets: Record<EditStyleId, EditStylePreset> = {
     id: "cinematic",
     name: "Cinematic",
     pacing: "slow",
-    minClipLength: 2,
+    minClipLength: 3,
     maxClipLength: 6,
     padding: {
       pre: 0.5,
-      post: 0.6
+      post: 0.7
     }
   },
 
@@ -30,10 +30,10 @@ export const stylePresets: Record<EditStyleId, EditStylePreset> = {
     name: "Podcast",
     pacing: "steady",
     minClipLength: 2,
-    maxClipLength: 8,
+    maxClipLength: 10,
     padding: {
-      pre: 0.3,
-      post: 0.5
+      pre: 0.5,
+      post: 1
     }
   },
 
@@ -42,10 +42,10 @@ export const stylePresets: Record<EditStyleId, EditStylePreset> = {
     name: "Clean",
     pacing: "balanced",
     minClipLength: 1,
-    maxClipLength: 4,
+    maxClipLength: 5,
     padding: {
-      pre: 0.25,
-      post: 0.25
+      pre: 0.2,
+      post: 0.6
     }
   }
 };
