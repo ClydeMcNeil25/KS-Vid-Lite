@@ -149,6 +149,10 @@ async function cleanupTempClips(tempClips: string[]) {
   );
 }
 
+function escapeConcatFilePath(filePath: string): string {
+  return filePath.replace(/'/g, "'\\''");
+}
+
 export async function renderVideo(
   clips: ClipInput[],
   outputPath: string,
@@ -170,6 +174,7 @@ export async function renderVideo(
   fs.mkdirSync(tempDir, { recursive: true });
 
   const tempClips: string[] = [];
+  const concatListPath = path.join(tempDir, "concat-inputs.txt");
 
   for (let i = 0; i < clips.length; i++) {
     const tempPath = path.join(tempDir, `trimmed-${i}.mp4`);
@@ -178,12 +183,19 @@ export async function renderVideo(
   }
 
   try {
-    await new Promise<void>((resolve, reject) => {
-      const command = ffmpeg();
+    await fs.promises.writeFile(
+      concatListPath,
+      tempClips
+        .map((clipPath) => `file '${escapeConcatFilePath(clipPath)}'`)
+        .join("\n"),
+      "utf8"
+    );
 
-      for (const clipPath of tempClips) {
-        command.input(clipPath);
-      }
+    await new Promise<void>((resolve, reject) => {
+      const command = ffmpeg(concatListPath).inputOptions([
+        "-f concat",
+        "-safe 0"
+      ]);
 
       command
         .on("start", (cmd) => console.log("FFmpeg started:", cmd))
@@ -194,11 +206,18 @@ export async function renderVideo(
             new Error(details ? `${error.message}\n${details}` : error.message)
           );
         })
-        .mergeToFile(outputPath, tempDir);
+        .outputOptions(["-c copy"])
+        .save(outputPath);
     });
 
     console.log("Render complete:", outputPath);
   } finally {
+    try {
+      await fs.promises.unlink(concatListPath);
+    } catch {
+      // Best-effort cleanup only.
+    }
+
     await cleanupTempClips(tempClips);
   }
 }
