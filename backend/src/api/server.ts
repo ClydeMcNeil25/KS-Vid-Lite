@@ -9,8 +9,11 @@ import { AspectRatio, OutputFps } from "../types/project.types";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const uploadsDir = path.resolve(process.cwd(), "uploads");
-const tempDir = path.resolve(process.cwd(), "temp");
+const dataDir = process.env.KS_VID_LITE_DATA_DIR
+  ? path.resolve(process.env.KS_VID_LITE_DATA_DIR)
+  : process.cwd();
+const uploadsDir = path.join(dataDir, "uploads");
+const tempDir = path.join(dataDir, "temp");
 const rendersDir = path.join(tempDir, "renders");
 
 fs.mkdirSync(uploadsDir, { recursive: true });

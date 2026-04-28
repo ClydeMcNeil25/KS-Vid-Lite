@@ -163,7 +163,10 @@ export async function renderVideo(
     fps: format.fps ?? 30
   };
 
-  const tempDir = path.resolve(process.cwd(), "temp");
+  const dataDir = process.env.KS_VID_LITE_DATA_DIR
+    ? path.resolve(process.env.KS_VID_LITE_DATA_DIR)
+    : process.cwd();
+  const tempDir = path.join(dataDir, "temp");
   fs.mkdirSync(tempDir, { recursive: true });
 
   const tempClips: string[] = [];

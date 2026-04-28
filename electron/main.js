@@ -7,6 +7,8 @@ let mainWindow;
 
 function startBackend() {
   try {
+    process.env.KS_VID_LITE_DATA_DIR = app.getPath("userData");
+
     const backendEntry = path.join(
       __dirname,
       "..",
