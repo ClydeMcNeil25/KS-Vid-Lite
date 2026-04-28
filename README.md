@@ -43,6 +43,125 @@ KS-Vid-Lite is the foundation for a broader ecosystem of creator tools under Kru
 
 # 🚀 KS-Vid-Lite Devlog
 
+**Version:** v1.0b (Beta Release)
+**Date:** 2026-04-27
+
+---
+
+## 🧠 Summary
+
+Version **v1.0b** marks the official **Beta Release** of KS-Vid-Lite — the first fully packaged, installable version of the application distributed to external testers.
+
+This milestone represents the transition from internal development into **real-world validation**, where usability, stability, and performance will be tested outside the dev environment.
+
+---
+
+## 🔥 Major Milestone Achieved
+
+```text
+KS-Vid-Lite is now a fully functional desktop application ready for Beta testing.
+```
+
+---
+
+## 🏗️ System Status
+
+### 🖥️ Desktop Application
+
+* Electron-based standalone app ✔️
+* Fully packaged Windows `.exe` installer ✔️
+* Splash screen + branding integrated ✔️
+* Custom app icon implemented ✔️
+
+---
+
+### 🔌 Backend Engine
+
+* Express API running inside Electron ✔️
+* `/auto-edit`, `/health`, `/media`, `/download` endpoints fully functional ✔️
+* File upload pipeline working (FormData + Multer) ✔️
+
+---
+
+### 🎬 Media Processing Pipeline
+
+* Media ingestion + metadata extraction ✔️
+* Timeline generation (speech-aware + silence detection) ✔️
+* Clip trimming + formatting ✔️
+* Final render pipeline via FFmpeg ✔️
+
+---
+
+### ⚙️ FFmpeg / FFprobe Integration (Critical Success)
+
+* Resolved Electron `app.asar` execution issue ✔️
+* Binaries successfully executed in packaged environment ✔️
+* Metadata extraction and rendering confirmed working ✔️
+
+---
+
+### 🎨 Frontend UI
+
+* React + Vite production build ✔️
+* Packaged frontend loading via `dist/index.html` ✔️
+* Backend communication working in production ✔️
+* Core panels functional (Sources, Timeline, Status) ✔️
+
+---
+
+## 🧪 Testing Outcome
+
+Internal testing confirms:
+
+```text
+✔ App installs successfully
+✔ App launches without crashes
+✔ Media uploads are processed
+✔ Auto-edit pipeline executes
+✔ Output video is generated and playable
+```
+
+This version has been validated end-to-end within controlled testing.
+
+---
+
+## ⚠️ Known Limitations
+
+* No real-time render progress indicator
+* Timeline logic may reject footage under strict conditions
+* Limited user-facing error messaging
+* No GPU acceleration
+* Windows-only build for Beta
+
+---
+
+## 🎯 Beta Objectives
+
+This Beta release is focused on gathering real-world feedback for:
+
+* Installation experience across different systems
+* Stability during editing and rendering
+* Edge cases in media handling
+* Overall user experience and workflow clarity
+
+---
+
+## 🔮 Next Phase (Post-Beta)
+
+* Render progress UI
+* Improved timeline intelligence (adaptive duration handling)
+* Drag & drop media uploads
+* Enhanced error handling for non-technical users
+* Performance optimizations
+
+---
+
+## 💬 Closing Note
+
+v1.0b represents the moment KS-Vid-Lite moves beyond development and into **product validation**. The core system is now functional, installable, and ready to be shaped by real user feedback.
+
+---
+
 **Version:** v1.3b
 **Date:** 2026-04-27
 
